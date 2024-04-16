@@ -29,16 +29,71 @@ endclocking
 default disable iff (reset);
 
 // Re-defined wires 
+wire [63:0] unsigned_a;
+wire [63:0] unsigned_b;
+wire res_sign;
+wire [63:0] mulresp_data;
+wire mulreq_transid;
+wire [63:0] mulresp_data;
+wire mulresp_transid;
 
 // Symbolics and Handshake signals
+wire [0:0] symb_mulreq_transid;
+am__symb_mulreq_transid_stable: assume property($stable(symb_mulreq_transid));
+wire mulresp_hsk = mulresp_val && mulresp_rdy;
+wire mulreq_hsk = mulreq_val && mulreq_rdy;
 
 //==============================================================================
 // Modeling
 //==============================================================================
 
+// Modeling incoming request for mulreq_trans
+if (ASSERT_INPUTS) begin
+	as__mulreq_trans_fairness: assert property (mulresp_val |-> s_eventually(mulresp_rdy));
+end else begin
+	am__mulreq_trans_fairness: assume property (mulresp_val |-> s_eventually(mulresp_rdy));
+end
+
+// Generate sampling signals and model
+reg [3:0] mulreq_trans_transid_sampled;
+wire mulreq_trans_transid_set = mulreq_hsk && mulreq_transid == symb_mulreq_transid;
+wire mulreq_trans_transid_response = mulresp_hsk && mulresp_transid == symb_mulreq_transid;
+
+always_ff @(posedge clk) begin
+	if(reset) begin
+		mulreq_trans_transid_sampled <= '0;
+	end else if (mulreq_trans_transid_set || mulreq_trans_transid_response ) begin
+		mulreq_trans_transid_sampled <= mulreq_trans_transid_sampled + mulreq_trans_transid_set - mulreq_trans_transid_response;
+	end
+end
+co__mulreq_trans_transid_sampled: cover property (|mulreq_trans_transid_sampled);
+if (ASSERT_INPUTS) begin
+	as__mulreq_trans_transid_sample_no_overflow: assert property (mulreq_trans_transid_sampled != '1 || !mulreq_trans_transid_set);
+end else begin
+	am__mulreq_trans_transid_sample_no_overflow: assume property (mulreq_trans_transid_sampled != '1 || !mulreq_trans_transid_set);
+end
+
+
+// Assert that if valid eventually ready or dropped valid
+as__mulreq_trans_transid_hsk_or_drop: assert property (mulreq_val |-> s_eventually(!mulreq_val || mulreq_rdy));
+// Assert that every request has a response and that every reponse has a request
+as__mulreq_trans_transid_eventual_response: assert property (|mulreq_trans_transid_sampled |-> s_eventually(mulresp_val && (mulresp_transid == symb_mulreq_transid) ));
+as__mulreq_trans_transid_was_a_request: assert property (mulreq_trans_transid_response |-> mulreq_trans_transid_set || mulreq_trans_transid_sampled);
+
+assign mulreq_transid = 1'b0;
+assign res_sign = mulreq_msg_a[31] ^ mulreq_msg_b[31];
+assign mulresp_data = mulresp_msg_result;
+assign mulresp_transid = 1'b0;
+assign unsigned_b = mulreq_msg_b[31] ? ~mulreq_msg_b + 1'b1 : mulreq_msg_b;
+assign unsigned_a = mulreq_msg_a[31] ? ~mulreq_msg_a + 1'b1 : mulreq_msg_a;
 
 //X PROPAGATION ASSERTIONS
 `ifdef XPROP
+	 as__no_x_mulreq_val: assert property(!$isunknown(mulreq_val));
+	 as__no_x_mulreq_transid: assert property(mulreq_val |-> !$isunknown(mulreq_transid));
+	 as__no_x_mulresp_val: assert property(!$isunknown(mulresp_val));
+	 as__no_x_mulresp_data: assert property(mulresp_val |-> !$isunknown(mulresp_data));
+	 as__no_x_mulresp_transid: assert property(mulresp_val |-> !$isunknown(mulresp_transid));
 `endif
 
 //====DESIGNER-ADDED-SVA====//

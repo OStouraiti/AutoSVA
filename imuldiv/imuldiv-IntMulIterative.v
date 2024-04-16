@@ -7,6 +7,16 @@
 
 module imuldiv_IntMulIterative
 (
+  /*AUTOSVA
+    mulreq_trans: mulreq -IN> mulresp
+    [63:0] unsigned_a = mulreq_msg_a[31] ? ~mulreq_msg_a + 1'b1 : mulreq_msg_a
+    [63:0] unsigned_b = mulreq_msg_b[31] ? ~mulreq_msg_b + 1'b1 : mulreq_msg_b
+    res_sign = mulreq_msg_a[31] ^ mulreq_msg_b[31]
+    [63:0] mulresp_data = res_sign ? ~(unsigned_a * unsigned_b) + 1'b1 : unsigned_a * unsigned_b
+    mulreq_transid = 1'b0
+    [63:0] mulresp_data = mulresp_msg_result
+    mulresp_transid = 1'b0
+    */
   input                clk,
   input                reset,
 
