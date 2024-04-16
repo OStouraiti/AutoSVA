@@ -5,7 +5,7 @@ set DUT_ROOT $env(DUT_ROOT)
 # Analyze design under verification files (no edit)
 set DUT_PATH ${DUT_ROOT}/imuldiv/
 set INC_PATH ${DUT_ROOT}/imuldiv
-set PROP_PATH ${AUTOSVA_ROOT}/ft_imuldiv-IntMulDivIterative/sva
+set PROP_PATH ${AUTOSVA_ROOT}/ft_imuldiv-IntMulIterative/sva
 
 set_elaborate_single_run_mode off
 set_automatic_library_search on
@@ -13,9 +13,9 @@ set_analyze_libunboundsearch on
 set_analyze_librescan on
 # Analyze property files
 analyze -clear
-analyze -sv12 -f ${AUTOSVA_ROOT}/ft_imuldiv-IntMulDivIterative/files.vc
+analyze -sv12 -f ${AUTOSVA_ROOT}/ft_imuldiv-IntMulIterative/files.vc
 # Elaborate design and properties
-elaborate -top imuldiv_IntMulDivIterative -create_related_covers {witness precondition} -auto_hr_info
+elaborate -top imuldiv_IntMulIterative -create_related_covers {witness precondition} -auto_hr_info
 # Set up Clocks and Resets
 clock clk
 reset -expression (reset)

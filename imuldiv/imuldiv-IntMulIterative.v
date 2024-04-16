@@ -306,7 +306,7 @@ module imuldiv_IntMulIterativeCtrl
 
       STATE_IDLE:
         if ( mulreq_go ) begin
-          state_next = STATE_IDLE;
+          state_next = STATE_CALC;
         end
 
       STATE_CALC:
