@@ -1,0 +1,13 @@
++libext+.v
++libext+.h
++libext+.sv
++libext+.tmp.v
++librescan
++incdir+${DUT_PATH}
+-y ${DUT_PATH}
++incdir+${INC_PATH}
+-y ${INC_PATH}
+-f ${PROP_PATH}/../manual_sub.vc
+${PROP_PATH}/imuldiv-IntMulDivIterative_prop.sv
+${PROP_PATH}/imuldiv-IntMulDivIterative_bind.svh
+${DUT_ROOT}/imuldiv/imuldiv-IntMulDivIterative.v
