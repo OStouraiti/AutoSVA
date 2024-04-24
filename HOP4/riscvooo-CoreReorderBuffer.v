@@ -8,12 +8,18 @@
 module riscv_CoreReorderBuffer
 (
     /*AUTOSVA
-    rob_trans: rob_alloc_req -IN> rob_commit
+    rob_alloc_commit_trans: rob_alloc_req -IN> rob_commit
     [4:0] rob_alloc_req_data = rob_alloc_req_preg
-    rob_alloc_req_transid = 1'b0
     rob_commit_val = rob_commit_wen
     [4:0] rob_commit_data = rob_commit_rf_waddr
-    rob_commit_transid = 1'b0
+    [3:0] rob_alloc_req_transid = 4'b0
+    [3:0] rob_commit_transid = 4'b0
+    rob_fill_commit_trans: rob_fill -IN> rob_commit
+    [3:0] rob_fill_data = rob_fill_slot
+    [3:0] rob_commit_data = rob_commit_slot
+    rob_commit_val = rob_commit_wen
+    [3:0] rob_fill_transid = rob_fill_slot
+    [3:0] rob_commit_transid = rob_commit_slot
     */
   input         clk,
   input         reset,
