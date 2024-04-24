@@ -181,11 +181,11 @@ always @(posedge clk) begin
 	else begin
 		if (rob_alloc_req_val && rob_alloc_req_rdy) begin
 			rob_alloc_req_transid_reg <= rob_alloc_req_transid_reg + 1 ;
-			head <= head + 4'b1; 
+			tail <= tail + 4'b1; 
 		end
 		if (rob_commit_val) begin
 			rob_commit_transid_reg <= rob_commit_transid_reg + 1;
-			tail <= tail + 4'b1; 
+			head <= head + 4'b1; 
 		end
 	end
 end
@@ -197,15 +197,6 @@ always @* begin
         as_alloc_fill: assume property (@(posedge clk) (rob_alloc_resp_slot == i) |-> s_eventually (rob_fill_slot == i));
     end
 end
-
-// Assert that one cycle after getting filled, a slot gets commited
-// FIX: Only holds true for the head.
-// integer i;
-// always @* begin
-//     for (i = 0; i < 16; i++) begin
-//         assert property (@(posedge clk) ((rob_fill_slot == i && (rob_fill_val))) |-> s_eventually ((rob_commit_slot == i) && rob_commit_wen));
-//     end
-// end
 
 // Assume fill slot is any of the pending slots
 wire [4:0] test = rob_fill_slot + 5'b1;
@@ -253,5 +244,9 @@ as_alloc_rdy_not_full: assert property ((full == 1'b0) |-> rob_alloc_req_rdy);
 
 // assert that rob_alloc_resp_slot is inserted after the tail
 as_alloc_resp_slot_equal_tail: assert property ((rob_alloc_req_val && rob_alloc_req_rdy) |-> (rob_alloc_resp_slot == tail));
+
+//Assert that one cycle after getting filled the head gets commited
+// FIX: Only holds true for the head.
+as_head_commits_after_fill: assert property (((rob_fill_slot == head) && rob_fill_val) |-> ##1 ((rob_commit_slot == head) && rob_commit_wen));
 
 endmodule
