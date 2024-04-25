@@ -1,4 +1,1 @@
-source ~/.bashrc
-python2 autosva.py -f imuldiv/imuldiv-IntMulDivIterative.v -v -i imuldiv -x XPROP -tool jasper
-python2 autosva.py -f imuldiv/imuldiv-IntMulIterative.v -v -i imuldiv -x XPROP -tool jasper
-python2 autosva.py -f imuldiv/imuldiv-IntDivIterative.v -v -i imuldiv -x XPROP -tool jasper
+python2 autosva.py -f ece475-lab2/riscvstall/riscvstall-Core.v -v -i riscv_Core -x XPROP -tool jasper

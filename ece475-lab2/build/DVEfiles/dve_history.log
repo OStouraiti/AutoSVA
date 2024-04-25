@@ -1,0 +1,115 @@
+# Preference setting overrides
+gui_create_pref_key -category {Globals} -key {load_detail_for_funcov} -value_type {bool} -value {false}
+
+# State setting overrides
+gui_state_default_create -off -ini
+gui_set_state_value -category Globals -key recent_databases -value {{gui_open_db -file /home/os6536/ece475/ece475-lab2/tests/build/vmh/riscv-mulhu.vcd} {gui_open_db -file /home/os6536/ece475/ece475-lab2/tests/build/vmh/riscv-mulh.vcd} {gui_open_db -file /home/os6536/ece475/ece475-lab2/tests/build/vmh/riscv-rem.vcd} {gui_open_db -file /home/os6536/ece475/ece475-lab2/tests/build/vmh/riscv-mul.vcd} {gui_open_db -file /home/os6536/ece475/ece475-lab2/tests/build/vmh/riscv-lw.vcd}}
+gui_set_state_value -category Globals -key recent_sessions -value {{gui_load_session -ignore_errors -file /home/os6536/ece475/ece475-lab2/build/session.riscv-sub.vcd.vpd.tcl -ignore_errors} {gui_load_session -ignore_errors -file /home/os6536/ece475/ece475-lab2/build/session.riscv-sub.vcd.vpd.tcl} {gui_load_session -ignore_errors -file /home/os6536/ece475/ece475-lab1/build/dve_template.vpd.tcl -ignore_errors}}
+gui_set_state_value -category Layout -key child_console_size_x -value 1703
+gui_set_state_value -category Layout -key child_console_size_y -value 118
+gui_set_state_value -category Layout -key child_data_coltype -value 69
+gui_set_state_value -category Layout -key child_data_colvalue -value 128
+gui_set_state_value -category Layout -key child_data_colvariable -value 257
+gui_set_state_value -category Layout -key child_data_size_x -value 452
+gui_set_state_value -category Layout -key child_data_size_y -value 498
+gui_set_state_value -category Layout -key child_hier_col3 -value {-1}
+gui_set_state_value -category Layout -key child_hier_colhier -value 261
+gui_set_state_value -category Layout -key child_hier_colpd -value 0
+gui_set_state_value -category Layout -key child_hier_coltype -value 118
+gui_set_state_value -category Layout -key child_hier_size_x -value 377
+gui_set_state_value -category Layout -key child_hier_size_y -value 498
+gui_set_state_value -category Layout -key child_source_docknewline -value false
+gui_set_state_value -category Layout -key child_source_pos_x -value {-2}
+gui_set_state_value -category Layout -key child_source_pos_y -value {-15}
+gui_set_state_value -category Layout -key child_source_size_x -value 877
+gui_set_state_value -category Layout -key child_source_size_y -value 493
+gui_set_state_value -category Layout -key child_wave_colname -value 236
+gui_set_state_value -category Layout -key child_wave_colvalue -value 236
+gui_set_state_value -category Layout -key child_wave_left -value 477
+gui_set_state_value -category Layout -key child_wave_right -value 1163
+gui_set_state_value -category Layout -key main_pos_x -value {-58}
+gui_set_state_value -category Layout -key main_pos_y -value 56
+gui_set_state_value -category Layout -key main_size_x -value 1645
+gui_set_state_value -category Layout -key main_size_y -value 753
+gui_set_state_value -category Layout -key stand_wave_child_docknewline -value false
+gui_set_state_value -category Layout -key stand_wave_child_pos_x -value {-2}
+gui_set_state_value -category Layout -key stand_wave_child_pos_y -value {-15}
+gui_set_state_value -category Layout -key stand_wave_child_size_x -value 1650
+gui_set_state_value -category Layout -key stand_wave_child_size_y -value 588
+gui_set_state_value -category Layout -key stand_wave_top_pos_x -value 59
+gui_set_state_value -category Layout -key stand_wave_top_pos_y -value 56
+gui_set_state_value -category Layout -key stand_wave_top_size_x -value 1704
+gui_set_state_value -category Layout -key stand_wave_top_size_y -value 753
+gui_create_state_key -category FindDialog -key m_pMatchCase -value_type bool -value false
+gui_create_state_key -category FindDialog -key m_pMatchWord -value_type bool -value false
+gui_create_state_key -category FindDialog -key m_pUseCombo -value_type string -value {}
+gui_create_state_key -category FindDialog -key m_pWrapAround -value_type bool -value true
+gui_create_state_key -category SearchDialog -key MatchCase -value_type bool -value false
+gui_create_state_key -category SearchDialog -key MatchWord -value_type bool -value true
+gui_create_state_key -category SearchDialog -key SearchMode -value_type string -value Wildcards
+gui_create_state_key -category SearchDialog -key UseCombo -value_type bool -value true
+gui_create_state_key -category Widget_History -key TopLevel.2|EkTopVbox|wndWorkspace|qt_workspacechild2|Wave.1|left|filterVBox|controlHBox|unnamed -value_type string -value *op1
+gui_state_default_create -off
+
+# Begin command logging
+gui_open_db -file /home/os6536/ece475/ece475-lab2/tests/build/vmh/riscv-mulhsu.vcd
+gui_list_expand -id  Hier.1   riscv_sim
+gui_list_expand -id  Hier.1   riscv_sim.proc
+gui_list_expand -id  Hier.1   riscv_sim.proc.ctrl
+gui_list_select -id Hier.1 -current_item_name riscv_sim.proc.ctrl -current_item_type Scope  -selected  { riscv_sim.proc.ctrl   }
+gui_list_sort -id  Data.1   {Variable}
+gui_list_select -id Data.1 -selected  { riscv_sim.proc.ctrl.inst_is_load_Dhl   }
+gui_list_select -id Data.1 -selected  { riscv_sim.proc.ctrl.inst_is_muldiv_Dhl   }
+gui_open_window Wave
+gui_list_add -id Wave.1 -from Data.1 { riscv_sim.proc.ctrl.inst_is_muldiv_Dhl } -insertionbar
+gui_list_select -id Data.1 -selected  { riscv_sim.proc.ctrl.clk   }
+gui_list_add -id Wave.1 -from Data.1 { riscv_sim.proc.ctrl.clk } -insertionbar
+gui_list_select -id Hier.1 -current_item_name riscv_sim.mem -current_item_type Scope  -selected  { riscv_sim.mem   }
+gui_list_select -id Hier.1 -current_item_name riscv_sim.proc -current_item_type Scope  -selected  { riscv_sim.proc   }
+gui_list_select -id Data.1 -selected  { riscv_sim.proc.muldivresp_rdy   }
+gui_list_select -id Data.1 -selected  { riscv_sim.proc.muldivresp_val   }
+gui_list_add -id Wave.1 -from Data.1 { riscv_sim.proc.muldivresp_val } -insertionbar
+gui_list_select -id Hier.1 -current_item_name riscv_sim.proc.dmemresp_msg_from_bits -current_item_type Scope  -selected  { riscv_sim.proc.dmemresp_msg_from_bits   }
+gui_list_expand -id  Hier.1   riscv_sim.proc.dpath
+gui_list_select -id Hier.1 -current_item_name riscv_sim.proc.dpath.imuldiv -current_item_type Scope  -selected  { riscv_sim.proc.dpath.imuldiv   }
+gui_list_select -id Data.1 -selected  { riscv_sim.proc.dpath.imuldiv.muldivreq_go   }
+gui_list_select -id Data.1 -selected  { {riscv_sim.proc.dpath.imuldiv.muldivreq_msg_a[31:0]}   }
+gui_list_add -id Wave.1 -from Data.1 { {riscv_sim.proc.dpath.imuldiv.muldivreq_msg_a[31:0]} } -insertionbar
+gui_list_select -id Data.1 -selected  { {riscv_sim.proc.dpath.imuldiv.muldivreq_msg_b[31:0]}   }
+gui_list_add -id Wave.1 -from Data.1 { {riscv_sim.proc.dpath.imuldiv.muldivreq_msg_b[31:0]} } -insertionbar
+gui_list_select -id Data.1 -selected  { riscv_sim.proc.dpath.imuldiv.muldivreq_go   }
+gui_list_add -id Wave.1 -from Data.1 { riscv_sim.proc.dpath.imuldiv.muldivreq_go } -insertionbar
+gui_list_select -id Data.1 -selected  { {riscv_sim.proc.dpath.imuldiv.a_reg[31:0]}   }
+gui_list_add -id Wave.1 -from Data.1 { {riscv_sim.proc.dpath.imuldiv.a_reg[31:0]} } -insertionbar
+gui_list_select -id Data.1 -selected  { {riscv_sim.proc.dpath.imuldiv.b_reg[31:0]}   }
+gui_list_add -id Wave.1 -from Data.1 { {riscv_sim.proc.dpath.imuldiv.b_reg[31:0]} } -insertionbar
+gui_list_select -id Data.1 -selected  { {riscv_sim.proc.dpath.imuldiv.muldivreq_msg_fn[2:0]}   }
+gui_list_add -id Wave.1 -from Data.1 { {riscv_sim.proc.dpath.imuldiv.muldivreq_msg_fn[2:0]} } -insertionbar
+gui_list_select -id Data.1 -selected  { {riscv_sim.proc.dpath.imuldiv.muldivresp_msg_result[63:0]}   }
+gui_list_add -id Wave.1 -from Data.1 { {riscv_sim.proc.dpath.imuldiv.muldivresp_msg_result[63:0]} } -insertionbar
+gui_wv_zoom_timerange -id  Wave.1 0 445
+gui_wv_scroll_hslidermove -id  Wave.1 1108
+gui_list_select -id Wave.1 -selected  { riscv_sim.proc.ctrl.inst_is_muldiv_Dhl   }
+gui_list_select -id Wave.1 -selected  { riscv_sim.proc.ctrl.clk   }
+gui_list_move  -id  Wave.1    -sid  Wave.1   -after Group1 {{riscv_sim.proc.ctrl.clk}}
+gui_list_select -id Wave.1 -selected  { riscv_sim.proc.ctrl.inst_is_muldiv_Dhl   }
+gui_list_select -id Wave.1 -selected  { riscv_sim.proc.dpath.imuldiv.muldivreq_go   }
+gui_list_move  -id  Wave.1    -sid  Wave.1   -after riscv_sim.proc.ctrl.inst_is_muldiv_Dhl {{riscv_sim.proc.dpath.imuldiv.muldivreq_go}} 
+gui_list_select -id Wave.1 -selected  { riscv_sim.proc.muldivresp_val   }
+gui_list_move  -id  Wave.1    -sid  Wave.1   -after {riscv_sim.proc.dpath.imuldiv.muldivreq_msg_b[31:0]} {{riscv_sim.proc.muldivresp_val}} 
+gui_list_select -id Wave.1 -selected  { {riscv_sim.proc.dpath.imuldiv.muldivreq_msg_a[31:0]}   }
+gui_list_select -id Wave.1 -selected  { {riscv_sim.proc.dpath.imuldiv.muldivreq_msg_b[31:0]}   }
+gui_list_select -id Wave.1 -selected  { {riscv_sim.proc.dpath.imuldiv.a_reg[31:0]}   }
+gui_list_move  -id  Wave.1    -sid  Wave.1   -after {riscv_sim.proc.dpath.imuldiv.muldivreq_msg_b[31:0]} {{riscv_sim.proc.dpath.imuldiv.a_reg[31:0]}} 
+gui_list_select -id Wave.1 -selected  { {riscv_sim.proc.dpath.imuldiv.b_reg[31:0]}   }
+gui_list_move  -id  Wave.1    -sid  Wave.1   -after {riscv_sim.proc.dpath.imuldiv.a_reg[31:0]} {{riscv_sim.proc.dpath.imuldiv.b_reg[31:0]}} 
+gui_wv_scroll_hslidermove -id  Wave.1 1108
+gui_list_select -id Wave.1 -selected  { {riscv_sim.proc.dpath.imuldiv.a_reg[31:0]}   }
+gui_marker_move -id  Wave.1 C1 742
+gui_marker_move -id  Wave.1 C1 665
+gui_wv_scroll_hslidermove -id  Wave.1 1108
+#Dve crash log 
+#Encountered Illegal Interrupt SIGXFSZ on Mon Mar 4 20:13:04 2024
+#Version: O-2018.09-SP2_Full64
+#Platform: Linux RH 4.0
+#Data of Built: Feb 28 2019 23:36:52
