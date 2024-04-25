@@ -6,6 +6,7 @@
 `include "../../ece475-lab2/vc/vc-MemRespMsg.v"
 `include "../../ece475-lab2/riscvstall/riscvstall-CoreCtrl.v"
 `include "../../ece475-lab2/riscvstall/riscvstall-CoreDpath.v"
+`include "../../ece475-lab2/riscvstall/riscvstall-InstMsg.v"
 
 module riscv_Core_prop
 #(
@@ -51,16 +52,18 @@ endclocking
 default disable iff (reset);
 
 // Re-defined wires 
-wire imemreq_transid;
-wire rf_transid;
+wire [7:0] ir_transid;
+wire [7:0] rf_transid;
 wire rf_val;
 wire rf_rdy;
+wire ir_val;
+wire ir_rdy;
 
 // Symbolics and Handshake signals
-wire [0:0] symb_imemreq_transid;
-am__symb_imemreq_transid_stable: assume property($stable(symb_imemreq_transid));
+wire [7:0] symb_ir_transid;
+am__symb_ir_transid_stable: assume property($stable(symb_ir_transid));
 wire rf_hsk = rf_val && rf_rdy;
-wire imemreq_hsk = imemreq_val && imemreq_rdy;
+wire ir_hsk = ir_val && ir_rdy;
 
 //==============================================================================
 // Modeling
@@ -75,8 +78,8 @@ end
 
 // Generate sampling signals and model
 reg [3:0] imem_rf_trans_transid_sampled;
-wire imem_rf_trans_transid_set = imemreq_hsk && imemreq_transid == symb_imemreq_transid;
-wire imem_rf_trans_transid_response = rf_hsk && rf_transid == symb_imemreq_transid;
+wire imem_rf_trans_transid_set = ir_hsk && ir_transid == symb_ir_transid;
+wire imem_rf_trans_transid_response = rf_hsk && rf_transid == symb_ir_transid;
 
 always_ff @(posedge clk) begin
 	if(reset) begin
@@ -94,23 +97,61 @@ end
 
 
 // Assert that if valid eventually ready or dropped valid
-as__imem_rf_trans_transid_hsk_or_drop: assert property (imemreq_val |-> s_eventually(!imemreq_val || imemreq_rdy));
+as__imem_rf_trans_transid_hsk_or_drop: assert property (ir_val |-> s_eventually(!ir_val || ir_rdy));
 // Assert that every request has a response and that every reponse has a request
-as__imem_rf_trans_transid_eventual_response: assert property (|imem_rf_trans_transid_sampled |-> s_eventually(rf_val && (rf_transid == symb_imemreq_transid) ));
+as__imem_rf_trans_transid_eventual_response: assert property (|imem_rf_trans_transid_sampled |-> s_eventually(rf_val && (rf_transid == symb_ir_transid) ));
 as__imem_rf_trans_transid_was_a_request: assert property (imem_rf_trans_transid_response |-> imem_rf_trans_transid_set || imem_rf_trans_transid_sampled);
 
-assign rf_val = dpath.rf_wen_Whl;
-assign imemreq_transid = 1'b0;
+assign ir_rdy = !(ir_Dhl_prev == ctrl.ir_Dhl);
+assign ir_val = ctrl.inst_val_Dhl;
+assign rf_transid = rf_transid_reg;
 assign rf_rdy = 1'b1;
-assign rf_transid = 1'b0;
+assign rf_val = dpath.rf_wen_Whl && ctrl.inst_val_Whl;
+assign ir_transid = ir_transid_reg;
 
 //X PROPAGATION ASSERTIONS
 `ifdef XPROP
 	 as__no_x_rf_val: assert property(!$isunknown(rf_val));
 	 as__no_x_rf_transid: assert property(rf_val |-> !$isunknown(rf_transid));
-	 as__no_x_imemreq_val: assert property(!$isunknown(imemreq_val));
-	 as__no_x_imemreq_transid: assert property(imemreq_val |-> !$isunknown(imemreq_transid));
+	 as__no_x_ir_val: assert property(!$isunknown(ir_val));
+	 as__no_x_ir_transid: assert property(ir_val |-> !$isunknown(ir_transid));
 `endif
 
 //====DESIGNER-ADDED-SVA====//
+reg [7:0] ir_transid_reg;
+reg [7:0] rf_transid_reg; 
+
+always_ff @(posedge clk) begin
+	if (reset) begin
+		ir_transid_reg <= 8'b0; 
+		rf_transid_reg <= 8'b0;
+	end else begin
+		if (ir_val && ir_rdy) begin
+			ir_transid_reg <= ir_transid_reg + 8'b1; 
+		end
+
+		if (rf_val) begin
+			rf_transid_reg <= rf_transid_reg + 8'b1; 
+		end
+	end
+end
+
+reg [31:0] ir_Dhl_prev;
+always_ff @(posedge clk) begin
+	if (reset) begin
+		ir_Dhl_prev <= 32'b0; 
+	end else begin
+		ir_Dhl_prev <= ctrl.ir_Dhl; 
+	end
+end
+as_r_type_alu_instr: assume property ((ctrl.ir_Dhl  == `RISCV_INST_MSG_ADD) ||
+									  (ctrl.ir_Dhl  == `RISCV_INST_MSG_SUB) ||
+									  (ctrl.ir_Dhl  == `RISCV_INST_MSG_SLL) ||
+									  (ctrl.ir_Dhl  == `RISCV_INST_MSG_SLT) ||
+									  (ctrl.ir_Dhl  == `RISCV_INST_MSG_SLTU) ||
+									  (ctrl.ir_Dhl  == `RISCV_INST_MSG_XOR) ||
+									  (ctrl.ir_Dhl  == `RISCV_INST_MSG_SRL) ||
+									  (ctrl.ir_Dhl  == `RISCV_INST_MSG_SRA) ||
+									  (ctrl.ir_Dhl  == `RISCV_INST_MSG_OR) ||
+									  (ctrl.ir_Dhl  == `RISCV_INST_MSG_AND) ); 
 endmodule

@@ -9,15 +9,18 @@
 `include "../../ece475-lab2/vc/vc-MemRespMsg.v"
 `include "../../ece475-lab2/riscvstall/riscvstall-CoreCtrl.v"
 `include "../../ece475-lab2/riscvstall/riscvstall-CoreDpath.v"
+`include "../../ece475-lab2/riscvstall/riscvstall-InstMsg.v"
 
 module riscv_Core
 (
   /*AUTOSVA
-    imem_rf_trans: imemreq -IN> rf
-    imemreq_transid = 1'b0
-    rf_transid = 1'b0
+    imem_rf_trans: ir -IN> rf
+    [7:0] ir_transid = 8'b0
+    [7:0] rf_transid = 8'b0
     rf_val = dpath.rf_wen_Whl
     rf_rdy = 1'b1
+    ir_val = ctrl.inst_val_Dhl
+    ir_rdy = !ctrl.stall_Dhl
     */
   input         clk,
   input         reset,
