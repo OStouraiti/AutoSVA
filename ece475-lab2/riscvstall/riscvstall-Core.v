@@ -16,14 +16,17 @@
 module riscv_Core
 (
   /*AUTOSVA
-    imem_rf_trans: ir -IN> rf
-    [7:0] ir_transid = 8'b0
-    [7:0] rf_transid = 8'b0
-    rf_val = dpath.rf_wen_Whl
+    ir_rf_trans: ir -IN> rf
+    [7:0] ir_transid = ir_transid_reg
+    [7:0] rf_transid = rf_transid_reg
+    rf_val = dpath.rf_wen_Whl && ctrl.inst_val_Whl
     rf_rdy = 1'b1
     ir_val = ctrl.inst_val_Dhl
-    ir_rdy = !ctrl.stall_Dhl
+    ir_rdy = (ir_Dhl_prev != 32'b0) || !(ir_Dhl_prev == ctrl.ir_Dhl)
+    [32:0] ir_data = alu_output
+    [32:0] rf_data = dpath.wb_mux_out_Whl
     */
+
   input         clk,
   input         reset,
 
