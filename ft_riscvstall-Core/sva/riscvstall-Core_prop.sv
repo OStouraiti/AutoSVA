@@ -102,7 +102,7 @@ as__imem_rf_trans_transid_hsk_or_drop: assert property (ir_val |-> s_eventually(
 as__imem_rf_trans_transid_eventual_response: assert property (|imem_rf_trans_transid_sampled |-> s_eventually(rf_val && (rf_transid == symb_ir_transid) ));
 as__imem_rf_trans_transid_was_a_request: assert property (imem_rf_trans_transid_response |-> imem_rf_trans_transid_set || imem_rf_trans_transid_sampled);
 
-assign ir_rdy = !(ir_Dhl_prev == ctrl.ir_Dhl);
+assign ir_rdy = (ir_Dhl_prev != 32'b0) || !(ir_Dhl_prev == ctrl.ir_Dhl);
 assign ir_val = ctrl.inst_val_Dhl;
 assign rf_transid = rf_transid_reg;
 assign rf_rdy = 1'b1;
@@ -144,6 +144,7 @@ always_ff @(posedge clk) begin
 		ir_Dhl_prev <= ctrl.ir_Dhl; 
 	end
 end
+
 as_r_type_alu_instr: assume property ((ctrl.ir_Dhl  == `RISCV_INST_MSG_ADD) ||
 									  (ctrl.ir_Dhl  == `RISCV_INST_MSG_SUB) ||
 									  (ctrl.ir_Dhl  == `RISCV_INST_MSG_SLL) ||
@@ -153,5 +154,71 @@ as_r_type_alu_instr: assume property ((ctrl.ir_Dhl  == `RISCV_INST_MSG_ADD) ||
 									  (ctrl.ir_Dhl  == `RISCV_INST_MSG_SRL) ||
 									  (ctrl.ir_Dhl  == `RISCV_INST_MSG_SRA) ||
 									  (ctrl.ir_Dhl  == `RISCV_INST_MSG_OR) ||
-									  (ctrl.ir_Dhl  == `RISCV_INST_MSG_AND) ); 
+									  (ctrl.ir_Dhl  == `RISCV_INST_MSG_AND) );
+
+//verify the instruction is decoded correctly
+wire [31:25] func7_t = ctrl.ir_Dhl[31:25]; 
+wire [24:20] rs2 = ctrl.ir_Dhl[24:20]; 
+wire [19:15] rs1 = ctrl.ir_Dhl[19:15]; 
+wire [14:12] rtype_funct3_t = ctrl.ir_Dhl[14:12]; 
+wire [11:7] rd = ctrl.ir_Dhl[11:7]; 
+wire [6:0] opcode_t = ctrl.ir_Dhl[6:0]; 
+
+//assert that the read ports to the register file match the rs1 and rs2 from the opcode
+as_rs1_match: assert property (ctrl.inst_val_Dhl |-> (rs1 == dpath.rf_raddr0_Dhl)); 
+as_rs2_match: assert property (ctrl.inst_val_Dhl |-> (rs2 == dpath.rf_raddr1_Dhl)); 
+//as_rd_match: assert property (ctrl.inst_val_Dhl |-> (rd == dpath.rf_waddr_Whl)); 
+wire [31:0] rs1_data = dpath.rf_rdata0_Dhl;
+wire [31:0] rs2_data = dpath.rf_rdata1_Dhl;
+reg [31:0] alu_output; 
+reg rtype_alu_instr; 
+// performs the operation that will be checked at the end
+always_comb begin
+	alu_output = 32'bx;
+	rtype_alu_instr = 1'b0; 
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_ADD) begin
+		alu_output = rs1_data + rs2_data;
+		rtype_alu_instr = 1'b1; 
+	end 
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_SUB) begin
+		alu_output = rs1_data - rs2_data;
+		rtype_alu_instr = 1'b1; 
+	end 
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_SLL) begin
+		alu_output = rs1_data << rs2_data;
+		rtype_alu_instr = 1'b1; 
+	end 
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_SLT) begin 
+		alu_output = ($signed(rs1_data) < $signed(rs2_data));
+		rtype_alu_instr = 1'b1; 
+	end
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_SLTU) begin
+		alu_output = ($unsigned(rs1_data) < $unsigned(rs2_data));
+		rtype_alu_instr = 1'b1; 
+	end
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_XOR) begin
+		alu_output = (rs1_data ^ rs2_data);
+		rtype_alu_instr = 1'b1; 
+	end
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_SRL) begin
+		alu_output = rs1_data >> rs2_data;
+		rtype_alu_instr = 1'b1; 
+	end
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_SRA) begin
+		alu_output =  $signed(rs1_data) >>> rs2_data;
+		rtype_alu_instr = 1'b1; 
+	end
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_OR) begin
+		alu_output = (rs1_data || rs2_data);
+		rtype_alu_instr = 1'b1; 
+	end
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_AND) begin
+		alu_output = (rs1_data && rs2_data);
+		rtype_alu_instr = 1'b1; 
+	end
+end 
+
+// assert the alu_output is correct
+//as_alu_output_matches: assert property ((ctrl.inst_val_Whl && ctrl.rf_wen_Whl && rtype_alu_instr) |-> (alu_output == dpath.wb_mux_out_Whl));
+
 endmodule

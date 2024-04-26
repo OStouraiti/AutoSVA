@@ -11,6 +11,8 @@
 `include "../../ece475-lab2/riscvstall/riscvstall-CoreDpath.v"
 `include "../../ece475-lab2/riscvstall/riscvstall-InstMsg.v"
 
+//[4:0] ir_data = dpath.inst_rd_Dhl;
+//[4:0] rf_data = dpath.rf_waddr_Whl;
 module riscv_Core
 (
   /*AUTOSVA
