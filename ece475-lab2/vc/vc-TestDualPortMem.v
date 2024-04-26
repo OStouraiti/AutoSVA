@@ -107,7 +107,7 @@ module vc_TestDualPortMem
   vc_MemReqMsgFromBits#(p_addr_sz,p_data_sz) memreq0_msg_from_bits
   (
     .bits (memreq0_msg),
-    .type (memreq0_msg_type),
+    .t (memreq0_msg_type),
     .addr (memreq0_msg_addr),
     .len  (memreq0_msg_len),
     .data (memreq0_msg_data)
@@ -123,7 +123,7 @@ module vc_TestDualPortMem
   vc_MemReqMsgFromBits#(p_addr_sz,p_data_sz) memreq1_msg_from_bits
   (
     .bits (memreq1_msg),
-    .type (memreq1_msg_type),
+    .t (memreq1_msg_type),
     .addr (memreq1_msg_addr),
     .len  (memreq1_msg_len),
     .data (memreq1_msg_data)
@@ -307,7 +307,7 @@ module vc_TestDualPortMem
 
   vc_MemRespMsgToBits#(p_data_sz) memresp0_msg_to_bits
   (
-    .type (memresp0_msg_type_M),
+    .t (memresp0_msg_type_M),
     .len  (memresp0_msg_len_M),
     .data (memresp0_msg_data_M),
     .bits (memresp0_msg)
@@ -315,7 +315,7 @@ module vc_TestDualPortMem
 
   vc_MemRespMsgToBits#(p_data_sz) memresp1_msg_to_bits
   (
-    .type (memresp1_msg_type_M),
+    .t (memresp1_msg_type_M),
     .len  (memresp1_msg_len_M),
     .data (memresp1_msg_data_M),
     .bits (memresp1_msg)

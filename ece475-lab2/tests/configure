@@ -3008,12 +3008,7 @@ fi
 #-------------------------------------------------------------------------
 # Specify which test modules to include
 
-
-
-
-
-#  as_fn_append tmod_include "riscv_minimal "
-
+#TMOD_INCLUDE([riscv_minimal])
 
 
 

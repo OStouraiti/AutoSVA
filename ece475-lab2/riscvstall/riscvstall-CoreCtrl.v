@@ -104,7 +104,8 @@ module riscv_CoreCtrl
   reg bubble_Fhl;
 
   // CHANGED FOR FORMAL
-  wire imemreq_rdy_Fhl = imemreq_rdy; 
+  wire imemreq_rdy_Fhl = imemreq_rdy || ( !reset && imemreq_val_Fhl && inst_val_Fhl && !imemresp_val );
+  
   always @ ( posedge clk ) begin
     // Only pipeline the bubble bit if the next stage is not stalled
     if ( reset ) begin
@@ -705,12 +706,14 @@ module riscv_CoreCtrl
 
   // Stall in M if memory response is not returned for a valid request
 
+  // CHANGE FOR FORMAL
   wire stall_dmem_Mhl = ( !reset && dmemreq_val_Mhl && inst_val_Mhl && !dmemresp_val );
-  wire stall_imem_Mhl = ( !reset && imemreq_val_Fhl && inst_val_Fhl && !imemresp_val );
+  //wire stall_imem_Mhl = ( !reset && imemreq_val_Fhl && inst_val_Fhl && !imemresp_val );
 
   // Aggregate Stall Signal
 
-  wire stall_Mhl = ( stall_imem_Mhl || stall_dmem_Mhl );
+  // CHANGE FOR FORMAL
+  wire stall_Mhl = ( stall_dmem_Mhl ); //stall_imem_Mhl ||
 
   // Next bubble bit
 

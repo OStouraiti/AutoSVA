@@ -97,7 +97,7 @@ module riscv_Core
 
   vc_MemReqMsgToBits#(32,32) imemreq_msg_to_bits
   (
-    .type (`VC_MEM_REQ_MSG_TYPE_READ),
+    .t (`VC_MEM_REQ_MSG_TYPE_READ),
     .addr (imemreq_msg_addr),
     .len  (2'd0),
     .data (32'bx),
@@ -106,7 +106,7 @@ module riscv_Core
 
   vc_MemReqMsgToBits#(32,32) dmemreq_msg_to_bits
   (
-    .type (dmemreq_msg_rw),
+    .t (dmemreq_msg_rw),
     .addr (dmemreq_msg_addr),
     .len  (dmemreq_msg_len),
     .data (dmemreq_msg_data),
@@ -120,7 +120,7 @@ module riscv_Core
   vc_MemRespMsgFromBits#(32) imemresp_msg_from_bits
   (
     .bits (imemresp_msg),
-    .type (),
+    .t (),
     .len  (),
     .data (imemresp_msg_data)
   );
@@ -128,7 +128,7 @@ module riscv_Core
   vc_MemRespMsgFromBits#(32) dmemresp_msg_from_bits
   (
     .bits (dmemresp_msg),
-    .type (),
+    .t (),
     .len  (),
     .data (dmemresp_msg_data)
   );
