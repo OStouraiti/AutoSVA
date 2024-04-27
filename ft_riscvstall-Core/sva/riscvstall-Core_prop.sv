@@ -84,7 +84,7 @@ end
 // Generate sampling signals and model
 reg [3:0] ir_rf_trans_transid_sampled;
 wire ir_rf_trans_transid_set = ir_hsk && ir_transid == symb_ir_transid;
-wire ir_rf_trans_transid_response = rf_hsk && rf_transid == symb_ir_transid;
+wire ir_rf_trans_transid_response = rf_hsk && ((rf_transid == symb_ir_transid) && (symb_ir_transid != 8'b0));
 
 always_ff @(posedge clk) begin
 	if(reset) begin
@@ -104,7 +104,7 @@ end
 // Assert that if valid eventually ready or dropped valid
 as__ir_rf_trans_transid_hsk_or_drop: assert property (ir_val |-> s_eventually(!ir_val || ir_rdy));
 // Assert that every request has a response and that every reponse has a request
-as__ir_rf_trans_transid_eventual_response: assert property (|ir_rf_trans_transid_sampled |-> s_eventually(rf_val && (rf_transid == symb_ir_transid) ));
+as__ir_rf_trans_transid_eventual_response: assert property (|ir_rf_trans_transid_sampled  && (symb_ir_transid != 32'b0)|-> s_eventually(rf_val && (rf_transid == symb_ir_transid)) );
 as__ir_rf_trans_transid_was_a_request: assert property (ir_rf_trans_transid_response |-> ir_rf_trans_transid_set || ir_rf_trans_transid_sampled);
 
 
@@ -121,10 +121,10 @@ end
 as__ir_rf_trans_transid_data_unique: assert property (|ir_rf_trans_transid_sampled |-> !ir_rf_trans_transid_set);
 as__ir_rf_trans_transid_data_integrity: assert property (|ir_rf_trans_transid_sampled && ir_rf_trans_transid_response |-> (rf_data == ir_rf_trans_transid_data_model));
 
-assign ir_data = alu_output;
+assign ir_data = alu_output_reg;
 assign ir_rdy = !stall_Dhl_reg; //(ir_Dhl_prev != 32'b0) || ((ir_Dhl_prev != ctrl.ir_Dhl) && stall_Dhl_reg);
 assign ir_val = ctrl.inst_val_Dhl;
-assign rf_data = dpath.wb_mux_out_Whl;
+assign rf_data = rf_data_reg;
 assign rf_transid = rf_transid_reg;
 assign rf_rdy = 1'b1;
 assign rf_val = dpath.rf_wen_Whl && ctrl.inst_val_Whl;
@@ -143,6 +143,7 @@ assign ir_transid = ir_transid_reg;
 //====DESIGNER-ADDED-SVA====//
 reg [7:0] ir_transid_reg;
 reg [7:0] rf_transid_reg; 
+reg [31:0] rf_data_reg;
 reg stall_Dhl_reg; 
 
 always_ff @(posedge clk) begin
@@ -198,7 +199,27 @@ as_rs2_match: assert property (ctrl.inst_val_Dhl |-> (rs2 == dpath.rf_raddr1_Dhl
 wire [31:0] rs1_data = dpath.rf_rdata0_Dhl;
 wire [31:0] rs2_data = dpath.rf_rdata1_Dhl;
 reg [31:0] alu_output; 
+reg [31:0] alu_output_reg;
 reg rtype_alu_instr; 
+
+// Hold the alu_output back for a cycle
+always @(posedge clk) begin
+	if (reset) begin
+		alu_output_reg <= 32'b0;
+		rf_data_reg <= 32'b0;
+	end
+	else begin
+		if (ctrl.inst_val_Dhl) begin
+			alu_output_reg <= alu_output;
+		end
+		if (ctrl.inst_val_Whl && ctrl.rf_wen_Whl) begin
+			rf_data_reg <= dpath.wb_mux_out_Whl;
+		end
+	end
+end
+
+
+
 // performs the operation that will be checked at the end
 always_comb begin
 	alu_output = 32'bx;

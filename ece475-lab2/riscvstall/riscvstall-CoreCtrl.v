@@ -317,7 +317,8 @@ module riscv_CoreCtrl
   // Is the current stage valid?
 
   // CHANGED FOR FORMAL
-  wire inst_val_Dhl = ( !bubble_Dhl && !squash_Dhl && imemreq_rdy_Dhl);
+  wire inst_invalid_imem_Dhl = imemreq_rdy_Dhl ? 1'b0 : !stall_Dhl_reg;
+  wire inst_val_Dhl = ( !bubble_Dhl && !squash_Dhl && !inst_invalid_imem_Dhl);
 
   // Ship instruction for field parsing to datapath
 
@@ -559,12 +560,14 @@ module riscv_CoreCtrl
   reg [11:0] csr_addr_Xhl;
 
   reg        bubble_Xhl;
+  reg        stall_Dhl_reg; // CHANGED FOR FORMAL
 
   // Pipeline Controls
 
   always @ ( posedge clk ) begin
     if ( reset ) begin
       bubble_Xhl <= 1'b1;
+      stall_Dhl_reg <= 1'b0;
     end
     else if( !stall_Xhl ) begin
       ir_Xhl               <= ir_Dhl;
@@ -583,6 +586,7 @@ module riscv_CoreCtrl
       rf_waddr_Xhl         <= rf_waddr_Dhl;
       csr_wen_Xhl          <= csr_wen_Dhl;
       csr_addr_Xhl         <= csr_addr_Dhl;
+      stall_Dhl_reg        <= stall_Dhl;
 
       bubble_Xhl           <= bubble_next_Dhl;
     end
