@@ -15,7 +15,7 @@ set_analyze_librescan on
 analyze -clear
 analyze -sv12 -f ${AUTOSVA_ROOT}/ft_imuldiv-IntMulIterative/files.vc
 # Elaborate design and properties
-elaborate -top imuldiv_IntMulIterative -create_related_covers {witness precondition} -auto_hr_info
+elaborate -top imuldiv_IntMulIterative -bbox_mul 128 -create_related_covers {witness precondition} -auto_hr_info
 # Set up Clocks and Resets
 clock clk
 reset -expression (reset)

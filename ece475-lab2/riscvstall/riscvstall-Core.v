@@ -11,8 +11,7 @@
 `include "../../ece475-lab2/riscvstall/riscvstall-CoreDpath.v"
 `include "../../ece475-lab2/riscvstall/riscvstall-InstMsg.v"
 
-//[4:0] ir_data = dpath.inst_rd_Dhl;
-//[4:0] rf_data = dpath.rf_waddr_Whl;
+
 module riscv_Core
 (
   /*AUTOSVA
@@ -22,10 +21,20 @@ module riscv_Core
     rf_val = dpath.rf_wen_Whl && ctrl.inst_val_Whl
     rf_rdy = 1'b1
     ir_val = ctrl.inst_val_Dhl
-    ir_rdy = (ir_Dhl_prev != 32'b0) || !(ir_Dhl_prev == ctrl.ir_Dhl)
-    [32:0] ir_data = alu_output
-    [32:0] rf_data = dpath.wb_mux_out_Whl
-    */
+    ir_rdy = !stall_Dhl_reg;
+    [32:0] ir_data = alu_output_reg
+    [32:0] rf_data = rf_data_reg
+    
+    load_ir_dmem_trans: load_ir -IN> load_dmem
+    [7:0] load_ir_transid = load_ir_transid_reg
+    [7:0] load_dmem_transid = load_dmem_transid_reg
+    load_ir_rdy = !stall_Dhl_reg;
+    load_ir_val = ctrl.inst_val_Dhl && type_load_instr
+    load_dmem_rdy = dmemreq_rdy
+    load_dmem_val = ctrl.inst_val_Mhl && (dmemreq_msg_rw_Mhl == 1'b1)
+    load_ir_data = mem_addr_reg
+    load_dmem_data = dmemreq_msg_addr_reg
+  */
 
   input         clk,
   input         reset,
