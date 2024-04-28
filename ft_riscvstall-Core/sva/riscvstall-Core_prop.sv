@@ -186,7 +186,7 @@ as__load_ir_dmem_trans_transid_data_integrity: assert property (|load_ir_dmem_tr
 assign load_ir_transid = load_ir_transid_reg;
 assign ir_data = alu_output_reg;
 assign ir_rdy = !stall_Dhl_reg;
-assign ir_val = ctrl.inst_val_Dhl && !type_load_instr;
+assign ir_val = ctrl.inst_val_Dhl && (type_alu_r_instr_Dhl || type_alu_i_instr_Dhl);
 assign rf_data = rf_data_reg;
 assign rf_transid = rf_transid_reg;
 assign load_ir_data = mem_addr_reg;
@@ -195,7 +195,7 @@ assign load_dmem_data = dmemreq_msg_addr_reg;
 assign load_dmem_rdy = dmemreq_rdy;
 assign rf_rdy = 1'b1;
 assign load_ir_val = ctrl.inst_val_Dhl && type_load_instr;
-assign rf_val = dpath.rf_wen_Whl && ctrl.inst_val_Whl && type_load_instr_wb;
+assign rf_val = ctrl.rf_wen_Whl && ctrl.inst_val_Whl && (type_alu_r_instr_Whl || type_alu_i_instr_Whl); // if it is an ALU op,
 assign ir_transid = ir_transid_reg;
 assign load_dmem_val = dmemreq_val && core.dmemreq_msg_rw;
 // assign load_dmem_val = ctrl.inst_val_Mhl && (dmemreq_msg_rw_Mhl == 1'b1);
@@ -228,6 +228,9 @@ reg [4:0] rf_waddr_Whl_reg;
 reg [31:0] alu_output; 
 reg [31:0] alu_output_reg;
 reg [31:0] ir_Dhl_prev;
+reg [31:0] ir_Xhl;
+reg [31:0] ir_Mhl;
+reg [31:0] ir_Whl;
 
 // Unsigned wires for muldiv
 reg [31:0] unsigned_a;
@@ -257,7 +260,7 @@ wire [11:7] rd = ctrl.ir_Dhl[11:7];
 wire [6:0] opcode_t = ctrl.ir_Dhl[6:0];
 
 // Determine type of instruction
-wire type_alu_r_instr = ((ctrl.ir_Dhl  == `RISCV_INST_MSG_ADD) ||
+wire type_alu_r_instr_Dhl = ((ctrl.ir_Dhl  == `RISCV_INST_MSG_ADD) ||
 						(ctrl.ir_Dhl  == `RISCV_INST_MSG_SUB) ||
 						(ctrl.ir_Dhl  == `RISCV_INST_MSG_SLL) ||
 						(ctrl.ir_Dhl  == `RISCV_INST_MSG_SLT) ||
@@ -273,7 +276,23 @@ wire type_alu_r_instr = ((ctrl.ir_Dhl  == `RISCV_INST_MSG_ADD) ||
 						//(ctrl.ir_Dhl  == `RISCV_INST_MSG_REM)) ||
 						//(ctrl.ir_Dhl  == `RISCV_INST_MSG_REMU));
 
-wire type_alu_i_instr = ((ctrl.ir_Dhl  == `RISCV_INST_MSG_ADDI) ||    
+wire type_alu_r_instr_Whl = ((ir_Whl  == `RISCV_INST_MSG_ADD) ||
+						(ir_Whl  == `RISCV_INST_MSG_SUB) ||
+						(ir_Whl  == `RISCV_INST_MSG_SLL) ||
+						(ir_Whl  == `RISCV_INST_MSG_SLT) ||
+						(ir_Whl  == `RISCV_INST_MSG_SLTU) ||
+						(ir_Whl  == `RISCV_INST_MSG_XOR) ||
+						(ir_Whl  == `RISCV_INST_MSG_SRL) ||
+						(ir_Whl  == `RISCV_INST_MSG_SRA) ||
+						(ir_Whl  == `RISCV_INST_MSG_OR) ||
+						(ir_Whl  == `RISCV_INST_MSG_AND)); //|| 
+						//(ir_Whl  == `RISCV_INST_MSG_MUL) ||
+						//(ir_Whl  == `RISCV_INST_MSG_DIV) || 
+						//(ir_Whl  == `RISCV_INST_MSG_DIVU) || 
+						//(ir_Whl  == `RISCV_INST_MSG_REM)) ||
+						//(ir_Whl  == `RISCV_INST_MSG_REMU));
+
+wire type_alu_i_instr_Dhl = ((ctrl.ir_Dhl  == `RISCV_INST_MSG_ADDI) ||    
 						 (ctrl.ir_Dhl  == `RISCV_INST_MSG_SLTI) ||    
 						 (ctrl.ir_Dhl  == `RISCV_INST_MSG_SLTIU) ||  
 						 (ctrl.ir_Dhl  == `RISCV_INST_MSG_XORI)|| 
@@ -283,8 +302,18 @@ wire type_alu_i_instr = ((ctrl.ir_Dhl  == `RISCV_INST_MSG_ADDI) ||
 						 (ctrl.ir_Dhl  == `RISCV_INST_MSG_SRLI) ||  
 						 (ctrl.ir_Dhl  == `RISCV_INST_MSG_SRAI) );
 
+wire type_alu_i_instr_Whl = ((ir_Whl  == `RISCV_INST_MSG_ADDI) ||    
+						 (ir_Whl  == `RISCV_INST_MSG_SLTI) ||    
+						 (ir_Whl  == `RISCV_INST_MSG_SLTIU) ||  
+						 (ir_Whl  == `RISCV_INST_MSG_XORI)|| 
+						 (ir_Whl  == `RISCV_INST_MSG_ORI) ||   
+						 (ir_Whl  == `RISCV_INST_MSG_ANDI) ||    
+						 (ir_Whl  == `RISCV_INST_MSG_SLLI) || 
+						 (ir_Whl  == `RISCV_INST_MSG_SRLI) ||  
+						 (ir_Whl  == `RISCV_INST_MSG_SRAI) );
+
 wire type_load_instr = ((ctrl.ir_Dhl  == `RISCV_INST_MSG_LW));
-wire type_load_instr_wb = ((ctrl.ir_Whl  == `RISCV_INST_MSG_LW));
+wire type_load_instr_wb = ((ir_Whl  == `RISCV_INST_MSG_LW));
 
 // Calculate expected ALU output
 always_comb begin
@@ -427,7 +456,7 @@ always @(posedge clk) begin
 		mem_addr_reg <= 32'b0;
 	end
 	else begin
-		if (ctrl.inst_val_Dhl) begin
+		if (ctrl.inst_val_Dhl && (type_alu_i_instr_Dhl || type_alu_r_instr_Dhl)) begin
 			alu_output_reg <= alu_output;
 			rd_reg <= rd;
 			mem_addr_reg <= mem_addr;
@@ -443,10 +472,19 @@ always @(posedge clk) begin
 	end
 end
 
+// keep track our the instructions ourselves
+always @(posedge clk) begin
+	if (!ctrl.stall_Dhl) 
+		ir_Xhl <= ctrl.ir_Dhl; 
+	if (!ctrl.stall_Xhl)
+		ir_Mhl <= ir_Xhl;
+	if (!ctrl.stall_Mhl) 
+		ir_Whl <= ir_Mhl; 
+end
 
 // Assumptions
 // Assume valid opcode
-as_val_instr: assume property (type_alu_r_instr || type_alu_i_instr || type_load_instr); // 
+as_val_instr: assume property (type_alu_r_instr_Dhl || type_alu_i_instr_Dhl); // || type_load_instr 
 
 // Assume that the imemreq and imemresp_val happen at the same cycle
 as_imemreq_imemval_same_cycle: assume property (!imemreq_val |-> !imemresp_val);
@@ -456,11 +494,11 @@ as_dmemreq_val_eventually: assume property (ctrl.dmemreq_val_Xhl |-> s_eventuall
 
 // Assertions
 // Assert that the read ports to the register file match  rs1 and rs2 from the opcode
-as_rs1_match: assert property ((type_alu_r_instr || type_alu_i_instr || type_load_instr) && ctrl.inst_val_Dhl |-> (rs1 == dpath.rf_raddr0_Dhl)); 
-as_rs2_match: assert property (type_alu_r_instr && ctrl.inst_val_Dhl |-> (rs2 == dpath.rf_raddr1_Dhl)); 
+as_rs1_match: assert property ((type_alu_r_instr_Dhl || type_alu_i_instr_Dhl || type_load_instr) && ctrl.inst_val_Dhl |-> (rs1 == dpath.rf_raddr0_Dhl)); 
+as_rs2_match: assert property (type_alu_r_instr_Dhl && ctrl.inst_val_Dhl |-> (rs2 == dpath.rf_raddr1_Dhl)); 
 
 // Assert that rd in W stage matches rd of the decoded instruction for the same transid
 //|| type_load_instr)
-as__ir_rf_trans_transid_data_integrity_rd: assert property (|ir_rf_trans_transid_sampled && ir_rf_trans_transid_response && (type_alu_r_instr || type_alu_i_instr) |-> (rf_waddr_Whl_reg == ir_rf_trans_transid_data_model_rd));
+as__ir_rf_trans_transid_data_integrity_rd: assert property (|ir_rf_trans_transid_sampled && ir_rf_trans_transid_response && (type_alu_r_instr_Dhl || type_alu_i_instr_Dhl) |-> (rf_waddr_Whl_reg == ir_rf_trans_transid_data_model_rd));
 
 endmodule
