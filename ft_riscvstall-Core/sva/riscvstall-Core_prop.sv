@@ -147,7 +147,7 @@ end
 // Generate sampling signals and model
 reg [3:0] load_ir_dmem_trans_transid_sampled;
 wire load_ir_dmem_trans_transid_set = load_ir_hsk && load_ir_transid == symb_load_ir_transid;
-wire load_ir_dmem_trans_transid_response = load_dmem_hsk && load_dmem_transid == symb_load_ir_transid;
+wire load_ir_dmem_trans_transid_response = load_dmem_hsk && (load_dmem_transid == symb_load_ir_transid) && (symb_load_ir_transid != 8'b0);
 
 always_ff @(posedge clk) begin
 	if(reset) begin
@@ -193,7 +193,7 @@ assign rf_data = rf_data_reg;
 assign rf_transid = rf_transid_reg;
 assign load_ir_data = mem_addr_reg;
 assign load_dmem_transid = load_dmem_transid_reg;
-assign load_dmem_data = dmemreq_msg_addr_reg_reg;
+assign load_dmem_data = dmemreq_msg_addr_Whl;
 assign load_dmem_rdy = dmemreq_rdy_Mhl;
 assign rf_rdy = 1'b1;
 assign load_ir_val = ctrl.inst_val_Dhl && type_load_instr_Dhl;
@@ -295,13 +295,13 @@ reg [31:0] unsigned_res;
 reg dmemreq_msg_rw_Mhl;
 reg dmemreq_msg_rw_Xhl;
 reg [31:0] mem_addr_reg;
-reg [31:0] dmemreq_msg_addr_reg;
 reg [7:0] load_ir_transid_reg;
 reg [7:0] load_dmem_transid_reg; 
 reg [31:0] mem_addr; 
 reg dmemreq_val_Mhl;
 reg dmemreq_rdy_Mhl;
-reg [31:0] dmemreq_msg_addr_reg_reg; 
+reg [31:0] dmemreq_msg_addr_Mhl;
+reg [31:0] dmemreq_msg_addr_Whl; 
 
 // Wire definitions
 wire [31:0] rs1_data = dpath.rf_rdata0_Dhl;
@@ -539,7 +539,8 @@ end
 always @(posedge clk) begin
 	if (reset) begin
 		alu_output_reg <= 32'b0;
-		dmemreq_msg_addr_reg <= 32'b0; 
+		dmemreq_msg_addr_Mhl <= 32'b0; 
+		dmemreq_msg_addr_Whl <= 32'b0;
 		rf_data_reg <= 32'b0;
 		rd_reg <= 5'b0;
 		rf_waddr_Whl_reg <= 5'b0;
@@ -558,12 +559,12 @@ always @(posedge clk) begin
 			mem_addr_reg <= mem_addr;
 		end 
 
-		if (!ctrl.stall_Xhl)  begin //ctrl.inst_val_Xhl && ctrl.is_load_Xhl
-			dmemreq_msg_addr_reg <= dpath.dmemreq_msg_addr;
+		if (!ctrl.stall_Xhl)  begin
+			dmemreq_msg_addr_Mhl <= dpath.dmemreq_msg_addr;
 		end
 
 		if (load_dmem_val) begin
-			dmemreq_msg_addr_reg_reg <= dmemreq_msg_addr_reg;
+			dmemreq_msg_addr_Whl <= dmemreq_msg_addr_Mhl;
 		end
 
 		if (rf_val) begin
