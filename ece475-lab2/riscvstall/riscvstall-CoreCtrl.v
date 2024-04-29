@@ -466,6 +466,7 @@ module riscv_CoreCtrl
   // Memory Controls
 
   wire       dmemreq_msg_rw_Dhl  = ( cs[`RISCV_INST_MSG_MEM_REQ] == st );
+  wire       is_load_Dhl = ( cs[`RISCV_INST_MSG_MEM_REQ] == ld );
   wire [1:0] dmemreq_msg_len_Dhl = cs[`RISCV_INST_MSG_MEM_LEN];
   wire       dmemreq_val_Dhl     = ( cs[`RISCV_INST_MSG_MEM_REQ] != nr );
 
@@ -561,6 +562,7 @@ module riscv_CoreCtrl
 
   reg        bubble_Xhl;
   reg        stall_Dhl_reg; // CHANGED FOR FORMAL
+  reg        is_load_Xhl; 
 
   // Pipeline Controls
 
@@ -588,6 +590,7 @@ module riscv_CoreCtrl
       csr_addr_Xhl         <= csr_addr_Dhl;
 
       bubble_Xhl           <= bubble_next_Dhl;
+      is_load_Xhl          <= is_load_Dhl; 
     end
     
     stall_Dhl_reg        <= stall_Dhl;
@@ -668,6 +671,8 @@ module riscv_CoreCtrl
   reg  [4:0] rf_waddr_Mhl;
   reg        csr_wen_Mhl;
   reg [11:0] csr_addr_Mhl;
+  // CHANGE FOR FORMAL
+  reg stall_dmem_req_Mhl; //stall dmem bc not ready for the request in the execute stage
 
   reg        bubble_Mhl;
 
@@ -686,9 +691,10 @@ module riscv_CoreCtrl
       csr_wen_Mhl          <= csr_wen_Xhl;
       csr_addr_Mhl         <= csr_addr_Xhl;
 
-      bubble_Mhl           <= bubble_next_Xhl;
+      bubble_Mhl           <= bubble_next_Xhl; 
     end
     dmemreq_val_Mhl <= dmemreq_val;
+    stall_dmem_req_Mhl   <= stall_dmem_Xhl; // CHANGE FOR FORMAL
   end
 
   //----------------------------------------------------------------------
@@ -718,7 +724,7 @@ module riscv_CoreCtrl
   // Aggregate Stall Signal
 
   // CHANGE FOR FORMAL
-  wire stall_Mhl = ( stall_dmem_Mhl ); //stall_imem_Mhl ||
+  wire stall_Mhl = ( stall_dmem_Mhl); //stall_imem_Mhl ||
 
   // Next bubble bit
 

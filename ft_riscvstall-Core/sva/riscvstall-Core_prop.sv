@@ -61,16 +61,16 @@ wire rf_val;
 wire rf_rdy;
 wire ir_val;
 wire ir_rdy;
-wire [32:0] ir_data;
-wire [32:0] rf_data;
+wire [31:0] ir_data;
+wire [31:0] rf_data;
 wire [7:0] load_ir_transid;
 wire [7:0] load_dmem_transid;
 wire load_ir_rdy;
 wire load_ir_val;
 wire load_dmem_rdy;
 wire load_dmem_val;
-wire load_ir_data;
-wire load_dmem_data;
+wire [31:0] load_ir_data;
+wire [31:0] load_dmem_data;
 
 // Symbolics and Handshake signals
 wire [7:0] symb_ir_transid;
@@ -172,7 +172,7 @@ as__load_ir_dmem_trans_transid_was_a_request: assert property (load_ir_dmem_tran
 
 
 // Modeling data integrity for load_ir_dmem_trans_transid
-reg [0:0] load_ir_dmem_trans_transid_data_model;
+reg [31:0] load_ir_dmem_trans_transid_data_model;
 always_ff @(posedge clk) begin
 	if(reset) begin
 		load_ir_dmem_trans_transid_data_model <= '0;
@@ -193,15 +193,15 @@ assign rf_data = rf_data_reg;
 assign rf_transid = rf_transid_reg;
 assign load_ir_data = mem_addr_reg;
 assign load_dmem_transid = load_dmem_transid_reg;
-assign load_dmem_data = dmemreq_msg_addr_reg;
-assign load_dmem_rdy = dmemreq_rdy;
+assign load_dmem_data = dmemreq_msg_addr_reg_reg;
+assign load_dmem_rdy = dmemreq_rdy_Mhl;
 assign rf_rdy = 1'b1;
 assign load_ir_val = ctrl.inst_val_Dhl && type_load_instr_Dhl;
 assign rf_val = ctrl.inst_val_Whl && ctrl.rf_wen_Whl && (type_alu_r_instr_Whl || type_alu_i_instr_Whl);
 // assign rf_val = (ctrl.inst_val_Whl && ctrl.rf_wen_Whl) ? ((type_alu_r_instr_Whl || type_alu_i_instr_Whl) ? 1'b1 : 1'b0) : rf_val;
 assign ir_transid = ir_transid_reg;
-assign load_dmem_val = dmemreq_val && core.dmemreq_msg_rw;
-assign load_dmem_val = ctrl.inst_val_Mhl && (dmemreq_msg_rw_Mhl == 1'b1);
+assign load_dmem_val = ctrl.inst_val_Mhl && (dmemreq_msg_rw_Mhl && dmemreq_val_Mhl) && type_load_instr_Mhl && !stall_Mhl_reg;
+// assign load_dmem_val = dmemreq_val && core.dmemreq_msg_rw;
 assign load_ir_rdy = !stall_Dhl_reg;
 
 //X PROPAGATION ASSERTIONS
@@ -268,6 +268,7 @@ wire type_srai_instr_Whl;
 
 // Load
 wire type_lw_instr_Dhl;
+wire type_load_instr_Mhl;
 wire type_lw_instr_Whl;
 
 // Register definitons
@@ -275,6 +276,7 @@ reg [7:0] ir_transid_reg;
 reg [7:0] rf_transid_reg; 
 reg [31:0] rf_data_reg;
 reg stall_Dhl_reg;
+reg stall_Mhl_reg; 
 reg [4:0] rd_reg;
 reg [4:0] rf_waddr_Whl_reg;
 reg [31:0] alu_output; 
@@ -291,11 +293,15 @@ reg [31:0] unsigned_res;
 
 // Load Regs 
 reg dmemreq_msg_rw_Mhl;
+reg dmemreq_msg_rw_Xhl;
 reg [31:0] mem_addr_reg;
 reg [31:0] dmemreq_msg_addr_reg;
 reg [7:0] load_ir_transid_reg;
 reg [7:0] load_dmem_transid_reg; 
 reg [31:0] mem_addr; 
+reg dmemreq_val_Mhl;
+reg dmemreq_rdy_Mhl;
+reg [31:0] dmemreq_msg_addr_reg_reg; 
 
 // Wire definitions
 wire [31:0] rs1_data = dpath.rf_rdata0_Dhl;
@@ -335,6 +341,13 @@ riscv_Instructions instructions_decode
     .type_ori_instr(type_ori_instr_Dhl),
     .type_andi_instr(type_andi_instr_Dhl),
 	.type_lw_instr(type_lw_instr_Dhl)
+); 
+
+// Parse the instruction in the M stage
+riscv_Instructions instructions_memory
+(
+	.instr(ctrl.ir_Mhl),
+	.type_lw_instr(type_lw_instr_Mhl)
 ); 
 
 // Parse the instruction in the W stage
@@ -405,8 +418,9 @@ wire type_alu_i_instr_Whl = type_addi_instr_Whl ||
 							type_ori_instr_Whl ||
 							type_andi_instr_Whl;
 
-wire type_load_instr_Dhl = type_lw_instr_Dhl;
-wire type_load_instr_Whl = type_lw_instr_Whl;
+assign type_load_instr_Dhl = type_lw_instr_Dhl;
+assign type_load_instr_Mhl = type_lw_instr_Mhl;
+assign type_load_instr_Whl = type_lw_instr_Whl;
 
 // Calculate expected ALU output
 always_comb begin
@@ -477,7 +491,7 @@ always_comb begin
 	end
 
 	// Calculate the load address
-	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_LW) begin
+	if (type_lw_instr_Dhl) begin
 		mem_addr = (rs1_data + $signed(i_immediate_12_bits));
 	end
 	
@@ -486,6 +500,7 @@ end
 // Implement flip-flops needed for data integrity checks
 always_ff @(posedge clk) begin
 	stall_Dhl_reg <= ctrl.stall_Dhl; 
+	stall_Mhl_reg <= ctrl.stall_Mhl;
 end
 
 always_ff @(posedge clk) begin
@@ -524,47 +539,61 @@ end
 always @(posedge clk) begin
 	if (reset) begin
 		alu_output_reg <= 32'b0;
+		dmemreq_msg_addr_reg <= 32'b0; 
 		rf_data_reg <= 32'b0;
 		rd_reg <= 5'b0;
 		rf_waddr_Whl_reg <= 5'b0;
 		mem_addr_reg <= 32'b0;
+		dmemreq_val_Mhl <= 1'b0;
+		dmemreq_rdy_Mhl <= 1'b0;
 	end
+
 	else begin
-		if (ctrl.inst_val_Dhl && (type_alu_r_instr_Dhl || type_alu_i_instr_Dhl)) begin
+		if (ir_val) begin
 			alu_output_reg <= alu_output;
 			rd_reg <= rd;
-			mem_addr_reg <= mem_addr;
 		end
-		if (ctrl.inst_val_Whl && ctrl.rf_wen_Whl && (type_alu_r_instr_Whl || type_alu_i_instr_Whl)) begin
+
+		if (load_ir_val) begin
+			mem_addr_reg <= mem_addr;
+		end 
+
+		if (!ctrl.stall_Xhl)  begin //ctrl.inst_val_Xhl && ctrl.is_load_Xhl
+			dmemreq_msg_addr_reg <= dpath.dmemreq_msg_addr;
+		end
+
+		if (load_dmem_val) begin
+			dmemreq_msg_addr_reg_reg <= dmemreq_msg_addr_reg;
+		end
+
+		if (rf_val) begin
 			rf_data_reg <= dpath.wb_mux_out_Whl;
 			rf_waddr_Whl_reg <= dpath.rf_waddr_Whl;
 		end
+		if (ctrl.inst_val_Dhl && !ctrl.stall_Xhl) begin
+			dmemreq_msg_rw_Xhl <= ctrl.cs[`RISCV_INST_MSG_MEM_REQ]; 
+		end
 
 		if (ctrl.inst_val_Xhl) begin
-			dmemreq_msg_rw_Mhl <= ctrl.dmemreq_msg_rw_Xhl; 
+			dmemreq_msg_rw_Mhl <= dmemreq_msg_rw_Xhl; 
+			dmemreq_val_Mhl <= ctrl.dmemreq_val_Xhl;
+			dmemreq_rdy_Mhl <= ctrl.dmemreq_rdy;
 		end
 	end
 end
 
-// keep track our the instructions ourselves
-/* always @(posedge clk) begin
-	if (!ctrl.stall_Dhl) 
-		ir_Xhl <= ctrl.ir_Dhl; 
-	if (!ctrl.stall_Xhl)
-		ir_Mhl <= ir_Xhl;
-	if (!ctrl.stall_Mhl) 
-		ir_Whl <= ir_Mhl; 
-end */
-
 // Assumptions
 // Assume valid opcode
-as_val_instr: assume property (type_alu_r_instr_Dhl || type_alu_i_instr_Dhl || type_load_instr_Dhl);
+am_val_instr: assume property (type_alu_r_instr_Dhl || type_alu_i_instr_Dhl || type_load_instr_Dhl);
 
 // Assume that the imemreq and imemresp_val happen at the same cycle
-as_imemreq_imemval_same_cycle: assume property (!imemreq_val |-> !imemresp_val);
+am_imemreq_imemval_same_cycle: assume property (!imemreq_val |-> !imemresp_val);
 
-// Assume that the 
-as_dmemreq_val_eventually: assume property (ctrl.dmemreq_val_Xhl |-> s_eventually dmemreq_rdy);
+// Assume that the data memory will eventually become ready after a request is made
+am_dmemreq_val_eventually: assume property (ctrl.dmemreq_val_Xhl |-> s_eventually dmemreq_rdy);
+
+// Assume that eventually dmem will give a valid response 
+am_dmemreq_imemval_same_cycle: assume property (dmemreq_val |-> s_eventually dmemresp_val);
 
 // Assertions
 // Assert that the read ports to the register file match  rs1 and rs2 from the opcode
