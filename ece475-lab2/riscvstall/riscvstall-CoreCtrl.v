@@ -586,10 +586,11 @@ module riscv_CoreCtrl
       rf_waddr_Xhl         <= rf_waddr_Dhl;
       csr_wen_Xhl          <= csr_wen_Dhl;
       csr_addr_Xhl         <= csr_addr_Dhl;
-      stall_Dhl_reg        <= stall_Dhl;
 
       bubble_Xhl           <= bubble_next_Dhl;
     end
+    
+    stall_Dhl_reg        <= stall_Dhl;
 
   end
 

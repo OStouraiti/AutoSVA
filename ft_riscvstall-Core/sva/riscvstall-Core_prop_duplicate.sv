@@ -187,8 +187,8 @@ as__load_ir_dmem_trans_transid_data_integrity: assert property (|load_ir_dmem_tr
 assign load_ir_transid = load_ir_transid_reg;
 assign ir_data = alu_output_reg;
 assign ir_rdy = !stall_Dhl_reg;
-assign ir_val = ctrl.inst_val_Dhl && (type_alu_r_instr_Dhl || type_alu_i_instr_Dhl);
-// assign ir_val = ctrl.inst_val_Dhl ? ((type_alu_r_instr_Dhl || type_alu_i_instr_Dhl) ? 1'b1 : 1'b0) : ir_val;
+// assign ir_val = ctrl.inst_val_Dhl && type_alu_r_instr_Dhl; // || type_alu_i_instr_Dhl);
+assign ir_val = ctrl.inst_val_Dhl && type_alu_r_instr_Dhl;
 assign rf_data = rf_data_reg;
 assign rf_transid = rf_transid_reg;
 assign load_ir_data = mem_addr_reg;
@@ -197,8 +197,8 @@ assign load_dmem_data = dmemreq_msg_addr_reg;
 assign load_dmem_rdy = dmemreq_rdy;
 assign rf_rdy = 1'b1;
 assign load_ir_val = ctrl.inst_val_Dhl && type_load_instr_Dhl;
-assign rf_val = ctrl.inst_val_Whl && ctrl.rf_wen_Whl && (type_alu_r_instr_Whl || type_alu_i_instr_Whl);
-// assign rf_val = (ctrl.inst_val_Whl && ctrl.rf_wen_Whl) ? ((type_alu_r_instr_Whl || type_alu_i_instr_Whl) ? 1'b1 : 1'b0) : rf_val;
+// assign rf_val = ctrl.rf_wen_Whl && ctrl.inst_val_Whl && type_alu_r_instr_Whl; // || type_alu_i_instr_Whl); // if it is an ALU op
+assign rf_val = ctrl.rf_wen_Whl && ctrl.inst_val_Whl && type_alu_r_instr_Whl; // || type_alu_i_instr_Whl); // if it is an ALU op
 assign ir_transid = ir_transid_reg;
 assign load_dmem_val = dmemreq_val && core.dmemreq_msg_rw;
 assign load_dmem_val = ctrl.inst_val_Mhl && (dmemreq_msg_rw_Mhl == 1'b1);
@@ -222,7 +222,6 @@ assign load_ir_rdy = !stall_Dhl_reg;
 
 //====DESIGNER-ADDED-SVA====//
 // Type of instruction wires
-// ALU R-type
 wire type_add_instr_Dhl;
 wire type_sub_instr_Dhl;
 wire type_sll_instr_Dhl;
@@ -244,31 +243,6 @@ wire type_srl_instr_Whl;
 wire type_sra_instr_Whl;
 wire type_or_instr_Whl;
 wire type_and_instr_Whl;
-
-// ALU I-type
-wire type_addi_instr_Dhl;
-wire type_slti_instr_Dhl;
-wire type_sltiu_instr_Dhl;
-wire type_xori_instr_Dhl;
-wire type_ori_instr_Dhl;
-wire type_andi_instr_Dhl;
-wire type_slli_instr_Dhl;
-wire type_srli_instr_Dhl;
-wire type_srai_instr_Dhl;
-
-wire type_addi_instr_Whl;
-wire type_slti_instr_Whl;
-wire type_sltiu_instr_Whl;
-wire type_xori_instr_Whl;
-wire type_ori_instr_Whl;
-wire type_andi_instr_Whl;
-wire type_slli_instr_Whl;
-wire type_srli_instr_Whl;
-wire type_srai_instr_Whl;
-
-// Load
-wire type_lw_instr_Dhl;
-wire type_lw_instr_Whl;
 
 // Register definitons
 reg [7:0] ir_transid_reg;
@@ -324,17 +298,7 @@ riscv_Instructions instructions_decode
     .type_srl_instr(type_srl_instr_Dhl),
     .type_sra_instr(type_sra_instr_Dhl),
     .type_or_instr(type_or_instr_Dhl),
-    .type_and_instr(type_and_instr_Dhl),
-	.type_addi_instr(type_addi_instr_Dhl),
-    .type_slli_instr(type_slli_instr_Dhl),
-    .type_slti_instr(type_slti_instr_Dhl),
-    .type_sltiu_instr(type_sltiu_instr_Dhl),
-    .type_xori_instr(type_xori_instr_Dhl),
-    .type_srli_instr(type_srli_instr_Dhl),
-    .type_srai_instr(type_srai_instr_Dhl),
-    .type_ori_instr(type_ori_instr_Dhl),
-    .type_andi_instr(type_andi_instr_Dhl),
-	.type_lw_instr(type_lw_instr_Dhl)
+    .type_and_instr(type_and_instr_Dhl)
 ); 
 
 // Parse the instruction in the W stage
@@ -350,17 +314,7 @@ riscv_Instructions instructions_writeback
     .type_srl_instr(type_srl_instr_Whl),
     .type_sra_instr(type_sra_instr_Whl),
     .type_or_instr(type_or_instr_Whl),
-    .type_and_instr(type_and_instr_Whl),
-	.type_addi_instr(type_addi_instr_Whl),
-    .type_slli_instr(type_slli_instr_Whl),
-    .type_slti_instr(type_slti_instr_Whl),
-    .type_sltiu_instr(type_sltiu_instr_Whl),
-    .type_xori_instr(type_xori_instr_Whl),
-    .type_srli_instr(type_srli_instr_Whl),
-    .type_srai_instr(type_srai_instr_Whl),
-    .type_ori_instr(type_ori_instr_Whl),
-    .type_andi_instr(type_andi_instr_Whl),
-	.type_lw_instr(type_lw_instr_Whl)
+    .type_and_instr(type_and_instr_Whl)
 );
 
 wire type_alu_r_instr_Dhl = type_add_instr_Dhl || 
@@ -385,29 +339,6 @@ wire type_alu_r_instr_Whl = type_add_instr_Whl ||
 							type_or_instr_Whl ||
 							type_and_instr_Whl;
 
-wire type_alu_i_instr_Dhl = type_addi_instr_Dhl || 
-							type_slli_instr_Dhl || 
-							type_slti_instr_Dhl ||
-							type_sltiu_instr_Dhl ||
-							type_xori_instr_Dhl ||
-							type_srli_instr_Dhl ||
-							type_srai_instr_Dhl ||
-							type_ori_instr_Dhl ||
-							type_andi_instr_Dhl;
-
-wire type_alu_i_instr_Whl = type_addi_instr_Whl || 
-							type_slli_instr_Whl || 
-							type_slti_instr_Whl ||
-							type_sltiu_instr_Whl ||
-							type_xori_instr_Whl ||
-							type_srli_instr_Whl ||
-							type_srai_instr_Whl ||
-							type_ori_instr_Whl ||
-							type_andi_instr_Whl;
-
-wire type_load_instr_Dhl = type_lw_instr_Dhl;
-wire type_load_instr_Whl = type_lw_instr_Whl;
-
 // Calculate expected ALU output
 always_comb begin
 	alu_output = 32'bx;
@@ -415,72 +346,93 @@ always_comb begin
 	unsigned_b = (rs2_data[31] ?  ~rs2_data + 1'b1 : rs2_data);
 	mem_addr = 32'bx; 
 	// ALU R type instructions
-	if (type_add_instr_Dhl) begin
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_ADD) begin
 		alu_output = rs1_data + rs2_data;
 	end 
-	if (type_sub_instr_Dhl) begin
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_SUB) begin
 		alu_output = rs1_data - rs2_data;
 	end 
-	if (type_sll_instr_Dhl) begin
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_SLL) begin
 		alu_output = rs1_data << rs2_data[4:0];
 	end 
-	if (type_slt_instr_Dhl) begin 
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_SLT) begin 
 		alu_output = ($signed(rs1_data) < $signed(rs2_data));
 	end
-	if (type_sltu_instr_Dhl) begin
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_SLTU) begin
 		alu_output = ($unsigned(rs1_data) < $unsigned(rs2_data));
 	end
-	if (type_xor_instr_Dhl) begin
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_XOR) begin
 		alu_output = (rs1_data ^ rs2_data); 
 	end
-	if (type_srl_instr_Dhl) begin
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_SRL) begin
 		alu_output = rs1_data >> rs2_data[4:0];
 	end
-	if (type_sra_instr_Dhl) begin
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_SRA) begin
 		alu_output =  $signed(rs1_data) >>> rs2_data[4:0];
 	end
-	if (type_or_instr_Dhl) begin
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_OR) begin
 		alu_output = (rs1_data | rs2_data);
 	end
-	if (type_and_instr_Dhl) begin
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_AND) begin
 		alu_output = (rs1_data & rs2_data);
+	end
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_MUL) begin
+		unsigned_res = unsigned_a * unsigned_b;
+		alu_output = (rs1_data[31] ^ rs2_data[31]) ? ~unsigned_res + 32'b1 : unsigned_res; 
+	end
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_DIV) begin
+		unsigned_res = unsigned_a / unsigned_b;
+		alu_output = (rs1_data[31] ^ rs2_data[31]) ? ~unsigned_res + 32'b1 : unsigned_res; 
+	end
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_DIVU) begin
+		unsigned_res = unsigned_a / unsigned_b;
+		alu_output = unsigned_res; 
+	end
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_REM) begin
+		unsigned_res = unsigned_a % unsigned_b;
+		alu_output = (rs1_data[31] ^ rs2_data[31]) ? ~unsigned_res + 32'b1 : unsigned_res;
+	end
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_REMU) begin
+		unsigned_res = unsigned_a % unsigned_b;
+		alu_output = unsigned_res;
 	end
 
 	// ALU I type instructions
-	if (type_addi_instr_Dhl) begin
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_ADDI) begin
 		alu_output = rs1_data + i_immediate_12_bits;
 	end 
-	if (type_slli_instr_Dhl) begin
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_SLLI) begin
 		alu_output = rs1_data << i_immediate_5_bits;
 	end 
-	if (type_slti_instr_Dhl) begin 
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_SLTI) begin 
 		alu_output = ($signed(rs1_data) < $signed(i_immediate_12_bits));
 	end
 
-	if (type_sltiu_instr_Dhl) begin
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_SLTIU) begin
 		alu_output = ($unsigned(rs1_data) < $unsigned(i_immediate_12_bits));
 	end
-	if (type_xori_instr_Dhl) begin
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_XORI) begin
 		alu_output = (rs1_data ^ $signed(i_immediate_12_bits)); 
 	end
-	if (type_srli_instr_Dhl) begin
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_SRLI) begin
 		alu_output = rs1_data >> i_immediate_5_bits;
 	end
-	if (type_srai_instr_Dhl) begin
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_SRAI) begin
 		alu_output =  $signed(rs1_data) >>> i_immediate_5_bits;
 	end
-	if (type_ori_instr_Dhl) begin
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_ORI) begin
 		alu_output = (rs1_data | $signed(i_immediate_12_bits));
 	end
-	if (type_andi_instr_Dhl) begin
+	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_ANDI) begin
 		alu_output = (rs1_data & $signed(i_immediate_12_bits));
 	end
 
 	// Calculate the load address
+	/*
 	if (ctrl.ir_Dhl  == `RISCV_INST_MSG_LW) begin
 		mem_addr = (rs1_data + $signed(i_immediate_12_bits));
 	end
-	
+	*/
 end 
 
 // Implement flip-flops needed for data integrity checks
@@ -492,20 +444,20 @@ always_ff @(posedge clk) begin
 	if (reset) begin
 		ir_transid_reg <= 8'b0; 
 		rf_transid_reg <= 8'b0;
-		load_ir_transid_reg <= 8'b0; 
-		load_dmem_transid_reg <= 8'b0; 
+		// load_ir_transid_reg <= 8'b0; 
+		// load_dmem_transid_reg <= 8'b0; 
 	end else begin
 		if (ir_val && ir_rdy) begin
 			ir_transid_reg <= ir_transid_reg + 8'b1; 
 		end
 
-		if (load_ir_val && load_ir_rdy) begin
-			load_ir_transid_reg <= load_ir_transid_reg + 8'b1; 
-		end
+		// if (load_ir_val && load_ir_rdy) begin
+			// load_ir_transid_reg <= load_ir_transid_reg + 8'b1; 
+		// end
 
-		if (load_dmem_val && load_dmem_rdy) begin
-			load_dmem_transid_reg <= load_dmem_transid_reg + 8'b1; 
-		end
+		// if (load_dmem_val && load_dmem_rdy) begin
+			// load_dmem_transid_reg <= load_dmem_transid_reg + 8'b1; 
+		// end
 
 		if (rf_val && rf_rdy) begin
 			rf_transid_reg <= rf_transid_reg + 8'b1; 
@@ -530,12 +482,12 @@ always @(posedge clk) begin
 		mem_addr_reg <= 32'b0;
 	end
 	else begin
-		if (ctrl.inst_val_Dhl && (type_alu_r_instr_Dhl || type_alu_i_instr_Dhl)) begin
+		if (ctrl.inst_val_Dhl && (type_alu_i_instr_Dhl || type_alu_r_instr_Dhl)) begin
 			alu_output_reg <= alu_output;
 			rd_reg <= rd;
 			mem_addr_reg <= mem_addr;
 		end
-		if (ctrl.inst_val_Whl && ctrl.rf_wen_Whl && (type_alu_r_instr_Whl || type_alu_i_instr_Whl)) begin
+		if (ctrl.inst_val_Whl && ctrl.rf_wen_Whl) begin
 			rf_data_reg <= dpath.wb_mux_out_Whl;
 			rf_waddr_Whl_reg <= dpath.rf_waddr_Whl;
 		end
@@ -547,18 +499,19 @@ always @(posedge clk) begin
 end
 
 // keep track our the instructions ourselves
-/* always @(posedge clk) begin
+always @(posedge clk) begin
 	if (!ctrl.stall_Dhl) 
 		ir_Xhl <= ctrl.ir_Dhl; 
 	if (!ctrl.stall_Xhl)
 		ir_Mhl <= ir_Xhl;
 	if (!ctrl.stall_Mhl) 
 		ir_Whl <= ir_Mhl; 
-end */
+end
 
 // Assumptions
 // Assume valid opcode
-as_val_instr: assume property (type_alu_r_instr_Dhl || type_alu_i_instr_Dhl || type_load_instr_Dhl);
+// as_val_instr: assume property (type_alu_r_instr_Dhl || type_alu_i_instr_Dhl); // || type_load_instr_Dhl 
+as_add_instr: assume property (type_alu_r_instr_Dhl);
 
 // Assume that the imemreq and imemresp_val happen at the same cycle
 as_imemreq_imemval_same_cycle: assume property (!imemreq_val |-> !imemresp_val);
@@ -568,10 +521,11 @@ as_dmemreq_val_eventually: assume property (ctrl.dmemreq_val_Xhl |-> s_eventuall
 
 // Assertions
 // Assert that the read ports to the register file match  rs1 and rs2 from the opcode
-as_rs1_match: assert property ((type_alu_r_instr_Dhl || type_alu_i_instr_Dhl || type_load_instr_Dhl) && ctrl.inst_val_Dhl |-> (rs1 == dpath.rf_raddr0_Dhl));
-as_rs2_match: assert property ((type_alu_r_instr_Dhl || type_alu_i_instr_Dhl) && ctrl.inst_val_Dhl |-> (rs2 == dpath.rf_raddr1_Dhl)); 
+as_rs1_match: assert property ((type_alu_r_instr_Dhl || type_alu_i_instr_Dhl) && ctrl.inst_val_Dhl |-> (rs1 == dpath.rf_raddr0_Dhl)); // || type_load_instr_Dhl 
+as_rs2_match: assert property (type_alu_r_instr_Dhl && ctrl.inst_val_Dhl |-> (rs2 == dpath.rf_raddr1_Dhl)); 
 
 // Assert that rd in W stage matches rd of the decoded instruction for the same transid
-as__ir_rf_trans_transid_data_integrity_rd: assert property (|ir_rf_trans_transid_sampled && ir_rf_trans_transid_response && (type_alu_r_instr_Dhl || type_alu_i_instr_Dhl || type_load_instr_Dhl) |-> (rf_waddr_Whl_reg == ir_rf_trans_transid_data_model_rd));
+//|| type_load_instr)
+as__ir_rf_trans_transid_data_integrity_rd: assert property (|ir_rf_trans_transid_sampled && ir_rf_trans_transid_response && (type_alu_r_instr_Dhl || type_alu_i_instr_Dhl) |-> (rf_waddr_Whl_reg == ir_rf_trans_transid_data_model_rd));
 
 endmodule
