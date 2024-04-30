@@ -4,26 +4,25 @@
 
 `ifndef RISCV_INT_MUL_ITERATIVE_V
 `define RISCV_INT_MUL_ITERATIVE_V
-//(mulreq_msg_a[31] ^ mulreq_msg_b[31]) ? (~((mulreq_msg_a[31] ? ~mulreq_msg_a + 1'b1 : mulreq_msg_a) * (mulreq_msg_b[31] ? ~mulreq_msg_b + 1'b1 : mulreq_msg_b)) + 1'b1) : ((mulreq_msg_a[31] ? ~mulreq_msg_a + 1'b1 : mulreq_msg_a) * (mulreq_msg_b[31] ? ~mulreq_msg_b + 1'b1 : mulreq_msg_b))
-    
-module imuldiv_IntMulIterative
+
+module imuldiv_IntMulIterative #(parameter WIDTH = 4)
 (
   /*AUTOSVA
     mulreq_trans: mulreq -IN> mulresp
-    [63:0] mulreq_data = mulreq_msg_a * mulreq_msg_b
+    [2*WIDTH-1:0] mulreq_data = mulreq_msg_a * mulreq_msg_b
     mulreq_transid = 1'b0
-    [63:0] mulresp_data = mulresp_msg_result
+    [2*WIDTH-1:0] mulresp_data = mulresp_msg_result
     mulresp_transid = 1'b0
     */
   input                clk,
   input                reset,
 
-  input  [31:0] mulreq_msg_a,
-  input  [31:0] mulreq_msg_b,
+  input  [WIDTH-1:0] mulreq_msg_a,
+  input  [WIDTH-1:0] mulreq_msg_b,
   input         mulreq_val,
   output        mulreq_rdy,
 
-  output [63:0] mulresp_msg_result,
+  output [2*WIDTH-1:0] mulresp_msg_result,
   output        mulresp_val,
   input         mulresp_rdy
 );
@@ -87,16 +86,16 @@ endmodule
 // Datapath
 //------------------------------------------------------------------------
 
-module imuldiv_IntMulIterativeDpath
+module imuldiv_IntMulIterativeDpath #(parameter WIDTH = 4)
 (
   input                clk,
   input                reset,
 
   // Operands and Result
 
-  input  [31:0] mulreq_msg_a,
-  input  [31:0] mulreq_msg_b,
-  output [63:0] mulresp_msg_result,
+  input  [WIDTH-1:0] mulreq_msg_a,
+  input  [WIDTH-1:0] mulreq_msg_b,
+  output [2*WIDTH-1:0] mulresp_msg_result,
 
   // Datapath Outputs
 
@@ -139,7 +138,7 @@ module imuldiv_IntMulIterativeDpath
   // Counter Mux
 
   wire [4:0] counter_mux_out
-    = ( cntr_mux_sel == op_load ) ? 31
+    = ( cntr_mux_sel == op_load ) ? WIDTH-1
     : ( cntr_mux_sel == op_next ) ? counter_reg - 1'b1
     :                               5'bx;
 
@@ -147,31 +146,31 @@ module imuldiv_IntMulIterativeDpath
 
   // Sign of Result
 
-  wire   sign_next = mulreq_msg_a[31] ^ mulreq_msg_b[31];
+  wire   sign_next = mulreq_msg_a[WIDTH-1] ^ mulreq_msg_b[WIDTH-1];
 
   assign sign      = sign_reg;
 
   // Unsigned Operands
 
-  wire [31:0] unsigned_a
-    = ( mulreq_msg_a[31] ) ? ~mulreq_msg_a + 1'b1
+  wire [WIDTH-1:0] unsigned_a
+    = ( mulreq_msg_a[WIDTH-1] ) ? ~mulreq_msg_a + 1'b1
     :                         mulreq_msg_a;
 
-  wire [31:0] unsigned_b
-    = ( mulreq_msg_b[31] ) ? ~mulreq_msg_b + 1'b1
+  wire [WIDTH-1:0] unsigned_b
+    = ( mulreq_msg_b[WIDTH-1] ) ? ~mulreq_msg_b + 1'b1
     :                         mulreq_msg_b;
 
   // Operand Muxes
 
-  wire [63:0] a_mux_out
-    = ( a_mux_sel == op_load ) ? { 32'b0, unsigned_a }
+  wire [2*WIDTH-1:0] a_mux_out
+    = ( a_mux_sel == op_load ) ? { {WIDTH{1'b0}}, unsigned_a }
     : ( a_mux_sel == op_next ) ? a_shift_out
-    :                            64'bx;
+    :                            {2*WIDTH{1'bx}};
 
-  wire [31:0]   b_mux_out
+  wire [WIDTH-1:0]   b_mux_out
     = ( b_mux_sel == op_load ) ? unsigned_b
     : ( b_mux_sel == op_next ) ? b_shift_out
-    :                            32'bx;
+    :                            {WIDTH{1'bx}};
 
   //----------------------------------------------------------------------
   // Sequential Logic
@@ -179,9 +178,9 @@ module imuldiv_IntMulIterativeDpath
 
   reg  [4:0] counter_reg;
   reg        sign_reg;
-  reg [63:0] a_reg;
-  reg [31:0] b_reg;
-  reg [63:0] result_reg;
+  reg [2*WIDTH-1:0] a_reg;
+  reg [WIDTH-1:0] b_reg;
+  reg [2*WIDTH-1:0] result_reg;
 
   always @ ( posedge clk ) begin
     if ( sign_en ) begin
@@ -207,32 +206,32 @@ module imuldiv_IntMulIterativeDpath
 
   // Operand Shifters
 
-  wire [63:0] a_shift_out = a_reg << 1;
+  wire [2*WIDTH-1:0] a_shift_out = a_reg << 1;
 
-  wire [31:0] b_shift_out = b_reg >> 1;
+  wire [WIDTH-1:0] b_shift_out = b_reg >> 1;
 
   // Adder
 
-  wire [63:0] add_out = result_reg + a_reg;
+  wire [2*WIDTH-1:0] add_out = result_reg + a_reg;
 
-  wire [63:0] add_mux_out
+  wire [2*WIDTH-1:0] add_mux_out
     = ( add_mux_sel == add_old )  ? result_reg
     : ( add_mux_sel == add_next ) ? add_out
-    :                               64'bx;
+    :                               {2*WIDTH{1'bx}};
 
   // Result Mux
 
-  wire [63:0] result_mux_out
-    = ( result_mux_sel == op_load ) ? 64'b0
+  wire [2*WIDTH-1:0] result_mux_out
+    = ( result_mux_sel == op_load ) ? {2*WIDTH{1'b0}}
     : ( result_mux_sel == op_next ) ? add_mux_out
-    :                                 64'bx;
+    :                                 {2*WIDTH{1'bx}};
 
   // Signed Result Mux
 
-  wire [63:0] signed_result_mux_out
+  wire [2*WIDTH-1:0] signed_result_mux_out
     = ( sign_mux_sel == sign_u ) ? result_reg
     : ( sign_mux_sel == sign_s ) ? ~result_reg + 1'b1
-    :                              64'bx;
+    :                              {2*WIDTH{1'bx}};
 
   // Final Result
 
@@ -244,7 +243,7 @@ endmodule
 // Control Logic
 //------------------------------------------------------------------------
 
-module imuldiv_IntMulIterativeCtrl
+module imuldiv_IntMulIterativeCtrl #(parameter WIDTH = 4)
 (
   input        clk,
   input        reset,
