@@ -19,7 +19,11 @@ module riscv_Instructions (
     output          type_slli_instr,
     output          type_srli_instr,
     output          type_srai_instr,
-    output          type_lw_instr
+    output          type_lw_instr,
+    output          type_lb_instr,
+    output          type_lh_instr,
+    output          type_lbu_instr,
+    output          type_lhu_instr
 );
 
 // ALU R-type
@@ -47,5 +51,9 @@ assign type_srai_instr = (instr[31:25] == 7'b0100000) && (instr[14:12] == 3'b101
 
 // Load
 assign type_lw_instr = (instr[14:12] == 3'b010) && (instr[6:0] == 7'b0000011);
+assign type_lb_instr = (instr[14:12] == 3'b000) && (instr[6:0] == 7'b0000011);
+assign type_lh_instr = (instr[14:12] == 3'b001) && (instr[6:0] == 7'b0000011);
+assign type_lbu_instr = (instr[14:12] == 3'b100) && (instr[6:0] == 7'b0000011);
+assign type_lhu_instr = (instr[14:12] == 3'b101) && (instr[6:0] == 7'b0000011);
 
 endmodule

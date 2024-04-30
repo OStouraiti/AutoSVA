@@ -18,22 +18,33 @@ module riscv_Core
     ir_rf_trans: ir -IN> rf
     [7:0] ir_transid = ir_transid_reg
     [7:0] rf_transid = rf_transid_reg
-    rf_val = dpath.rf_wen_Whl && ctrl.inst_val_Whl
+    rf_val = ctrl.inst_val_Whl && ctrl.rf_wen_Whl && (type_alu_r_instr_Whl || type_alu_i_instr_Whl);
     rf_rdy = 1'b1
-    ir_val = ctrl.inst_val_Dhl
+    ir_val = ctrl.inst_val_Dhl && (type_alu_r_instr_Dhl || type_alu_i_instr_Dhl)
     ir_rdy = !stall_Dhl_reg;
-    [32:0] ir_data = alu_output_reg
-    [32:0] rf_data = rf_data_reg
+    [31:0] ir_data = alu_output_reg
+    [31:0] rf_data = rf_data_reg
     
     load_ir_dmem_trans: load_ir -IN> load_dmem
     [7:0] load_ir_transid = load_ir_transid_reg
     [7:0] load_dmem_transid = load_dmem_transid_reg
     load_ir_rdy = !stall_Dhl_reg;
-    load_ir_val = ctrl.inst_val_Dhl && type_load_instr
-    load_dmem_rdy = dmemreq_rdy
-    load_dmem_val = ctrl.inst_val_Mhl && (dmemreq_msg_rw_Mhl == 1'b1)
-    load_ir_data = mem_addr_reg
-    load_dmem_data = dmemreq_msg_addr_reg
+    load_ir_val = ctrl.inst_val_Dhl && type_load_instr_Dhl
+    load_dmem_rdy = dmemreq_rdy_Mhl
+    load_dmem_val = ctrl.inst_val_Mhl && (dmemreq_msg_rw_Mhl && dmemreq_val_Mhl) && type_load_instr_Mhl && !stall_Mhl_reg
+    [31:0] load_ir_data = mem_addr_reg
+    [31:0] load_dmem_data = dmemreq_msg_addr_Whl
+
+    load_dmem_rf_trans: load_dmem_out -IN> load_rf
+    [7:0] load_dmem_out_transid = load_dmem_out_transid_reg
+    [7:0] load_rf_transid = load_rf_transid_reg
+    load_dmem_out_rdy = dmemresp_val
+    load_dmem_out_val = ctrl.inst_val_Mhl && type_load_instr_Mhl && dmemreq_val_Mhl && !stall_Mhl_reg
+    load_rf_rdy = 1'b1
+    load_rf_val = dpath.rf_wen_Whl && ctrl.inst_val_Whl
+    [31:0] load_dmem_out_data = load_dmem_out_data_reg
+    [31:0] load_rf_data = load_rf_data_reg
+
   */
 
   input         clk,
