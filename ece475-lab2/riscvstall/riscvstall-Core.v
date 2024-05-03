@@ -45,6 +45,16 @@ module riscv_Core
     [31:0] load_dmem_out_data = load_dmem_out_data_reg
     [31:0] load_rf_data = load_rf_data_reg
 
+    store_ir_dmem_trans: store_ir -IN> store_dmem
+    [7:0] store_ir_transid = store_ir_transid_reg
+    [7:0] store_dmem_transid = store_dmem_transid_reg
+    store_ir_rdy = !stall_Dhl_reg;
+    store_ir_val = ctrl.inst_val_Dhl && type_store_instr_Dhl
+    store_dmem_rdy = dmemreq_rdy_Mhl
+    store_dmem_val = ctrl.inst_val_Mhl && (!dmemreq_msg_rw_Mhl && dmemreq_val_Mhl) && type_store_instr_Mhl && !stall_Mhl_reg
+    [31:0] store_ir_data = mem_addr_reg
+    [31:0] store_dmem_data = dmemreq_msg_addr_Whl
+
   */
 
   input         clk,

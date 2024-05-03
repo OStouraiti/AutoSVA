@@ -23,7 +23,10 @@ module riscv_Instructions (
     output          type_lb_instr,
     output          type_lh_instr,
     output          type_lbu_instr,
-    output          type_lhu_instr
+    output          type_lhu_instr,
+    output          type_sw_instr,
+    output          type_sb_instr,
+    output          type_sh_instr
 );
 
 // ALU R-type
@@ -55,5 +58,11 @@ assign type_lb_instr = (instr[14:12] == 3'b000) && (instr[6:0] == 7'b0000011);
 assign type_lh_instr = (instr[14:12] == 3'b001) && (instr[6:0] == 7'b0000011);
 assign type_lbu_instr = (instr[14:12] == 3'b100) && (instr[6:0] == 7'b0000011);
 assign type_lhu_instr = (instr[14:12] == 3'b101) && (instr[6:0] == 7'b0000011);
+
+// Store
+assign type_sw_instr = (instr[14:12] == 3'b010) && (instr[6:0] == 7'b0100011);
+assign type_sb_instr = (instr[14:12] == 3'b000) && (instr[6:0] == 7'b0100011);
+assign type_sh_instr = (instr[14:12] == 3'b001) && (instr[6:0] == 7'b0100011);
+
 
 endmodule
