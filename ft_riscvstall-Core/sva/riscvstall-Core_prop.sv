@@ -194,6 +194,7 @@ as__ir_rf_trans_transid_was_a_request: assert property (ir_rf_trans_transid_resp
 // Modeling data integrity for ir_rf_trans_transid
 reg [31:0] ir_rf_trans_transid_data_model;
 reg [31:0] ir_rf_trans_transid_data_model_rd;
+
 always_ff @(posedge clk) begin
 	if(reset) begin
 		ir_rf_trans_transid_data_model <= '0;
@@ -243,11 +244,14 @@ as__store_ir_dmem_trans_transid_was_a_request: assert property (store_ir_dmem_tr
 
 // Modeling data integrity for store_ir_dmem_trans_transid
 reg [31:0] store_ir_dmem_trans_transid_data_model;
+reg [31:0] store_ir_dmem_trans_transid_data_model_rs2;
 always_ff @(posedge clk) begin
 	if(reset) begin
 		store_ir_dmem_trans_transid_data_model <= '0;
+		store_ir_dmem_trans_transid_data_model_rs2 <= '0;
 	end else if (store_ir_dmem_trans_transid_set) begin
 		store_ir_dmem_trans_transid_data_model <= store_ir_data;
+		store_ir_dmem_trans_transid_data_model_rs2 <= rs2_data_reg;
 	end
 end
 
@@ -316,19 +320,19 @@ assign store_dmem_transid = store_dmem_transid_reg;
 assign rf_transid = rf_transid_reg;
 assign load_dmem_rdy = dmemreq_rdy_Mhl;
 assign store_dmem_rdy = dmemreq_rdy_Mhl;
-assign load_ir_data = mem_addr_reg;
+assign load_ir_data = load_mem_addr_reg;
 assign load_dmem_out_data = load_dmem_out_data_reg;
 assign store_ir_val = ctrl.inst_val_Dhl && type_store_instr_Dhl;
 assign load_dmem_out_val = ctrl.inst_val_Mhl && type_load_instr_Mhl && dmemreq_val_Mhl && !stall_Mhl_reg;
-assign store_dmem_data = dmemreq_msg_addr_Whl;
+assign store_dmem_data = store_dmemreq_msg_addr_Whl;
 assign load_rf_rdy = 1'b1;
-assign store_ir_data = mem_addr_reg;
+assign store_ir_data = store_mem_addr_reg;
 assign load_dmem_out_transid = load_dmem_out_transid_reg;
 assign load_ir_val = ctrl.inst_val_Dhl && type_load_instr_Dhl;
 assign load_ir_transid = load_ir_transid_reg;
 assign load_dmem_out_rdy = dmemresp_val;
-assign store_dmem_val = ctrl.inst_val_Mhl && (!dmemreq_msg_rw_Mhl && dmemreq_val_Mhl) && type_store_instr_Mhl && !stall_Mhl_reg;
-assign load_dmem_data = dmemreq_msg_addr_Whl;
+assign store_dmem_val = ctrl.inst_val_Mhl && ((dmemreq_msg_rw_Mhl == 2'd2) && dmemreq_val_Mhl) && type_store_instr_Mhl && !stall_Mhl_reg;
+assign load_dmem_data = load_dmemreq_msg_addr_Whl;
 assign load_rf_val = dpath.rf_wen_Whl && ctrl.inst_val_Whl && type_load_instr_Whl;
 assign store_ir_rdy = !stall_Dhl_reg;
 assign rf_val = ctrl.inst_val_Whl && ctrl.rf_wen_Whl && (type_alu_r_instr_Whl || type_alu_i_instr_Whl);
@@ -469,16 +473,18 @@ reg [31:0] unsigned_b;
 reg [31:0] unsigned_res;
 
 // Load Regs 
-reg dmemreq_msg_rw_Mhl;
-reg dmemreq_msg_rw_Xhl;
-reg [31:0] mem_addr_reg;
+reg [1:0] dmemreq_msg_rw_Mhl;
+reg [1:0] dmemreq_msg_rw_Xhl;
+reg [31:0] load_mem_addr_reg;
 reg [7:0] load_ir_transid_reg;
 reg [7:0] load_dmem_transid_reg; 
-reg [31:0] mem_addr; 
+reg [31:0] load_mem_addr; 
 reg dmemreq_val_Mhl;
 reg dmemreq_rdy_Mhl;
-reg [31:0] dmemreq_msg_addr_Mhl;
-reg [31:0] dmemreq_msg_addr_Whl; 
+reg [31:0] load_dmemreq_msg_addr_Mhl;
+reg [31:0] load_dmemreq_msg_addr_Whl; 
+reg [31:0] store_dmemreq_msg_addr_Mhl;
+reg [31:0] store_dmemreq_msg_addr_Whl;
 reg [7:0] load_rf_transid_reg;
 reg [7:0] load_dmem_out_transid_reg;
 reg [31:0] load_rf_data_reg;
@@ -487,6 +493,11 @@ reg [31:0] load_dmem_out_data_reg;
 // Store Regs
 reg [7:0] store_ir_transid_reg;
 reg [7:0] store_dmem_transid_reg;
+reg [31:0] store_mem_addr_reg;
+reg [31:0] store_mem_addr;
+reg [31:0] dmemreq_msg_data_Mhl;
+reg [31:0] dmemreq_msg_data_Whl;
+reg [31:0] rs2_data_reg;
 
 // Wire definitions
 wire [31:0] rs1_data = dpath.rf_rdata0_Dhl;
@@ -495,6 +506,7 @@ wire [31:0] rs2_data = dpath.rf_rdata1_Dhl;
 // Parse the opcode
 wire [31:25] func7_t = ctrl.ir_Dhl[31:25]; 
 wire [31:0] i_immediate_12_bits = {{20{ctrl.ir_Dhl[31]}}, ctrl.ir_Dhl[31:20]};
+wire [31:0] i_immediate_12_bits_store = {{20{ctrl.ir_Dhl[31]}}, ctrl.ir_Dhl[31:25], ctrl.ir_Dhl[11:7]};
 wire [24:20] i_immediate_5_bits = ctrl.ir_Dhl[24:20];
 wire [24:20] rs2 = ctrl.ir_Dhl[24:20]; 
 wire [19:15] rs1 = ctrl.ir_Dhl[19:15]; 
@@ -637,7 +649,8 @@ always_comb begin
 	alu_output = 32'bx;
 	unsigned_a = (rs1_data[31] ?  ~rs1_data + 1'b1 : rs1_data); 
 	unsigned_b = (rs2_data[31] ?  ~rs2_data + 1'b1 : rs2_data);
-	mem_addr = 32'bx; 
+	load_mem_addr = 32'bx; 
+	store_mem_addr = 32'bx;
 	// ALU R type instructions
 	if (type_add_instr_Dhl) begin
 		alu_output = rs1_data + rs2_data;
@@ -702,7 +715,12 @@ always_comb begin
 
 	// Calculate the load address
 	if (type_load_instr_Dhl) begin
-		mem_addr = (rs1_data + $signed(i_immediate_12_bits));
+		load_mem_addr = (rs1_data + $signed(i_immediate_12_bits));
+	end
+
+	// Calculate the store address
+	if (type_store_instr_Dhl) begin
+		store_mem_addr = (rs1_data + $signed(i_immediate_12_bits_store));
 	end
 	
 end 
@@ -721,6 +739,8 @@ always_ff @(posedge clk) begin
 		load_dmem_transid_reg <= 8'b0; 
 		load_dmem_out_transid_reg <= 8'b0;
 		load_rf_transid_reg <= 8'b0;
+		store_ir_transid_reg <= 8'b0;
+		store_dmem_transid_reg <= 8'b0; 
 	end else begin
 		if (ir_val && ir_rdy) begin
 			ir_transid_reg <= ir_transid_reg + 8'b1; 
@@ -767,12 +787,15 @@ end
 always @(posedge clk) begin
 	if (reset) begin
 		alu_output_reg <= 32'b0;
-		dmemreq_msg_addr_Mhl <= 32'b0; 
-		dmemreq_msg_addr_Whl <= 32'b0;
+		load_dmemreq_msg_addr_Mhl <= 32'b0; 
+		store_dmemreq_msg_addr_Mhl <= 32'b0; 
+		load_dmemreq_msg_addr_Whl <= 32'b0;
+		store_dmemreq_msg_addr_Whl <= 32'b0;
 		rf_data_reg <= 32'b0;
 		rd_reg <= 5'b0;
 		rf_waddr_Whl_reg <= 5'b0;
-		mem_addr_reg <= 32'b0;
+		load_mem_addr_reg <= 32'b0;
+		store_mem_addr_reg <= 32'b0;
 		dmemreq_val_Mhl <= 1'b0;
 		dmemreq_rdy_Mhl <= 1'b0;
 		load_dmem_out_data_reg <= 32'b0;
@@ -786,15 +809,30 @@ always @(posedge clk) begin
 		end
 
 		if (load_ir_val) begin
-			mem_addr_reg <= mem_addr;
+			load_mem_addr_reg <= load_mem_addr;
 		end 
 
-		if (!ctrl.stall_Xhl)  begin
-			dmemreq_msg_addr_Mhl <= dpath.dmemreq_msg_addr;
+		if (store_ir_val) begin
+			store_mem_addr_reg <= store_mem_addr;
+			rs2_data_reg <= rs2_data;
+		end 
+
+		if (!ctrl.stall_Xhl && dmemreq_msg_rw_Xhl)  begin
+			load_dmemreq_msg_addr_Mhl <= dpath.dmemreq_msg_addr;
+		end
+
+		if (!ctrl.stall_Xhl && (dmemreq_msg_rw_Xhl == 2'd2))  begin
+			store_dmemreq_msg_addr_Mhl <= dpath.dmemreq_msg_addr;
+			dmemreq_msg_data_Mhl <= dpath.dmemreq_msg_data;
 		end
 
 		if (load_dmem_val) begin
-			dmemreq_msg_addr_Whl <= dmemreq_msg_addr_Mhl;
+			load_dmemreq_msg_addr_Whl <= load_dmemreq_msg_addr_Mhl;
+		end
+
+		if (store_dmem_val) begin
+			store_dmemreq_msg_addr_Whl <= store_dmemreq_msg_addr_Mhl;
+			dmemreq_msg_data_Whl <= dmemreq_msg_data_Mhl;
 		end
 
 		if (rf_val) begin
@@ -805,7 +843,7 @@ always @(posedge clk) begin
 			dmemreq_msg_rw_Xhl <= ctrl.cs[`RISCV_INST_MSG_MEM_REQ]; 
 		end
 
-		if (ctrl.inst_val_Xhl) begin
+		if (ctrl.inst_val_Xhl && !ctrl.stall_Mhl) begin // MAYBE THE END OF ALL THE WORLD
 			dmemreq_msg_rw_Mhl <= dmemreq_msg_rw_Xhl; 
 			dmemreq_val_Mhl <= ctrl.dmemreq_val_Xhl;
 			dmemreq_rdy_Mhl <= ctrl.dmemreq_rdy;
@@ -832,7 +870,7 @@ end
 
 // Assumptions
 // Assume valid opcode
-am_val_instr: assume property (type_alu_r_instr_Dhl || type_alu_i_instr_Dhl || type_load_instr_Dhl);
+am_val_instr: assume property (type_alu_r_instr_Dhl || type_alu_i_instr_Dhl || type_load_instr_Dhl || type_store_instr_Dhl);
 
 // Assume that the imemreq and imemresp_val happen at the same cycle
 am_imemreq_imemval_same_cycle: assume property (!imemreq_val |-> !imemresp_val);
@@ -845,10 +883,13 @@ am_dmemreq_imemval_same_cycle: assume property (dmemreq_val |-> ##1 dmemresp_val
 
 // Assertions
 // Assert that the read ports to the register file match  rs1 and rs2 from the opcode
-as_rs1_match: assert property ((type_alu_r_instr_Dhl || type_alu_i_instr_Dhl || type_load_instr_Dhl) && ctrl.inst_val_Dhl |-> (rs1 == dpath.rf_raddr0_Dhl));
-as_rs2_match: assert property ((type_alu_r_instr_Dhl || type_alu_i_instr_Dhl) && ctrl.inst_val_Dhl |-> (rs2 == dpath.rf_raddr1_Dhl)); 
+as_rs1_match: assert property ((type_alu_r_instr_Dhl || type_alu_i_instr_Dhl || type_load_instr_Dhl || type_store_instr_Dhl) && ctrl.inst_val_Dhl |-> (rs1 == dpath.rf_raddr0_Dhl));
+as_rs2_match: assert property ((type_alu_r_instr_Dhl || type_alu_i_instr_Dhl || type_store_instr_Dhl) && ctrl.inst_val_Dhl |-> (rs2 == dpath.rf_raddr1_Dhl)); 
 
 // Assert that rd in W stage matches rd of the decoded instruction for the same transid
 as__ir_rf_trans_transid_data_integrity_rd: assert property (|ir_rf_trans_transid_sampled && ir_rf_trans_transid_response && (type_alu_r_instr_Dhl || type_alu_i_instr_Dhl || type_load_instr_Dhl) |-> (rf_waddr_Whl_reg == ir_rf_trans_transid_data_model_rd));
+
+// Stores: Assert that data written to memory matches value read from rs2
+as__store_ir_dmem_trans_transid_data_integrity_rs2: assert property (|store_ir_dmem_trans_transid_sampled && store_ir_dmem_trans_transid_response && type_store_instr_Whl |-> (dmemreq_msg_data_Whl == store_ir_dmem_trans_transid_data_model_rs2));
 
 endmodule
