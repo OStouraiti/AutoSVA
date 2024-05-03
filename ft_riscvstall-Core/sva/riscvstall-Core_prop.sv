@@ -800,6 +800,8 @@ always @(posedge clk) begin
 		dmemreq_rdy_Mhl <= 1'b0;
 		load_dmem_out_data_reg <= 32'b0;
 		load_rf_data_reg <= 32'b0;
+		dmemreq_msg_data_Whl <= 32'b0; 
+		rs2_data_reg <= 32'b0; 
 	end
 
 	else begin
@@ -887,7 +889,7 @@ as_rs1_match: assert property ((type_alu_r_instr_Dhl || type_alu_i_instr_Dhl || 
 as_rs2_match: assert property ((type_alu_r_instr_Dhl || type_alu_i_instr_Dhl || type_store_instr_Dhl) && ctrl.inst_val_Dhl |-> (rs2 == dpath.rf_raddr1_Dhl)); 
 
 // Assert that rd in W stage matches rd of the decoded instruction for the same transid
-as__ir_rf_trans_transid_data_integrity_rd: assert property (|ir_rf_trans_transid_sampled && ir_rf_trans_transid_response && (type_alu_r_instr_Dhl || type_alu_i_instr_Dhl || type_load_instr_Dhl) |-> (rf_waddr_Whl_reg == ir_rf_trans_transid_data_model_rd));
+as__ir_rf_trans_transid_data_integrity_rd: assert property (|ir_rf_trans_transid_sampled && ir_rf_trans_transid_response && (type_alu_r_instr_Whl || type_alu_i_instr_Whl || type_load_instr_Whl) |-> (rf_waddr_Whl_reg == ir_rf_trans_transid_data_model_rd));
 
 // Stores: Assert that data written to memory matches value read from rs2
 as__store_ir_dmem_trans_transid_data_integrity_rs2: assert property (|store_ir_dmem_trans_transid_sampled && store_ir_dmem_trans_transid_response && type_store_instr_Whl |-> (dmemreq_msg_data_Whl == store_ir_dmem_trans_transid_data_model_rs2));
