@@ -10,6 +10,7 @@
 `include "../../ece475-lab2/riscvstall/riscvstall-CoreCtrl.v"
 `include "../../ece475-lab2/riscvstall/riscvstall-CoreDpath.v"
 `include "../../ece475-lab2/riscvstall/riscvstall-InstMsg.v"
+`include "../../ece475-lab2/riscvstall/riscvstall-Instructions.v"
 
 
 module riscv_Core
@@ -32,8 +33,8 @@ module riscv_Core
     load_ir_val = ctrl.inst_val_Dhl && type_load_instr_Dhl
     load_dmem_rdy = dmemreq_rdy_Mhl
     load_dmem_val = ctrl.inst_val_Mhl && (dmemreq_msg_rw_Mhl && dmemreq_val_Mhl) && type_load_instr_Mhl && !stall_Mhl_reg
-    [31:0] load_ir_data = mem_addr_reg
-    [31:0] load_dmem_data = dmemreq_msg_addr_Whl
+    [31:0] load_ir_data = load_mem_addr_reg
+    [31:0] load_dmem_data = load_dmemreq_msg_addr_Whl
 
     load_dmem_rf_trans: load_dmem_out -IN> load_rf
     [7:0] load_dmem_out_transid = load_dmem_out_transid_reg
@@ -41,7 +42,7 @@ module riscv_Core
     load_dmem_out_rdy = dmemresp_val
     load_dmem_out_val = ctrl.inst_val_Mhl && type_load_instr_Mhl && dmemreq_val_Mhl && !stall_Mhl_reg
     load_rf_rdy = 1'b1
-    load_rf_val = dpath.rf_wen_Whl && ctrl.inst_val_Whl && type_load_instr_Whl;
+    load_rf_val = dpath.rf_wen_Whl && ctrl.inst_val_Whl && type_load_instr_Whl
     [31:0] load_dmem_out_data = load_dmem_out_data_reg
     [31:0] load_rf_data = load_rf_data_reg
 
@@ -51,9 +52,9 @@ module riscv_Core
     store_ir_rdy = !stall_Dhl_reg;
     store_ir_val = ctrl.inst_val_Dhl && type_store_instr_Dhl
     store_dmem_rdy = dmemreq_rdy_Mhl
-    store_dmem_val = ctrl.inst_val_Mhl && (!dmemreq_msg_rw_Mhl && dmemreq_val_Mhl) && type_store_instr_Mhl && !stall_Mhl_reg
-    [31:0] store_ir_data = mem_addr_reg
-    [31:0] store_dmem_data = dmemreq_msg_addr_Whl
+    store_dmem_val = ctrl.inst_val_Mhl && ((dmemreq_msg_rw_Mhl == 2'd2) && dmemreq_val_Mhl) && type_store_instr_Mhl && !stall_Mhl_reg
+    [31:0] store_ir_data = store_mem_addr_reg
+    [31:0] store_dmem_data = store_dmemreq_msg_addr_Whl
 
   */
 

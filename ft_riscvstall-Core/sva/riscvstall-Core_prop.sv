@@ -193,15 +193,11 @@ as__ir_rf_trans_transid_was_a_request: assert property (ir_rf_trans_transid_resp
 
 // Modeling data integrity for ir_rf_trans_transid
 reg [31:0] ir_rf_trans_transid_data_model;
-reg [31:0] ir_rf_trans_transid_data_model_rd;
-
 always_ff @(posedge clk) begin
 	if(reset) begin
 		ir_rf_trans_transid_data_model <= '0;
-		ir_rf_trans_transid_data_model_rd <= '0;
 	end else if (ir_rf_trans_transid_set) begin
 		ir_rf_trans_transid_data_model <= ir_data;
-		ir_rf_trans_transid_data_model_rd <= rd_reg;
 	end
 end
 
@@ -244,14 +240,11 @@ as__store_ir_dmem_trans_transid_was_a_request: assert property (store_ir_dmem_tr
 
 // Modeling data integrity for store_ir_dmem_trans_transid
 reg [31:0] store_ir_dmem_trans_transid_data_model;
-reg [31:0] store_ir_dmem_trans_transid_data_model_rs2;
 always_ff @(posedge clk) begin
 	if(reset) begin
 		store_ir_dmem_trans_transid_data_model <= '0;
-		store_ir_dmem_trans_transid_data_model_rs2 <= '0;
 	end else if (store_ir_dmem_trans_transid_set) begin
 		store_ir_dmem_trans_transid_data_model <= store_ir_data;
-		store_ir_dmem_trans_transid_data_model_rs2 <= rs2_data_reg;
 	end
 end
 
@@ -729,6 +722,26 @@ end
 always_ff @(posedge clk) begin
 	stall_Dhl_reg <= ctrl.stall_Dhl; 
 	stall_Mhl_reg <= ctrl.stall_Mhl;
+end
+
+// additional store check for rs2
+reg [31:0] store_ir_dmem_trans_transid_data_model_rs2;
+always_ff @(posedge clk) begin
+	if(reset) begin
+		store_ir_dmem_trans_transid_data_model_rs2 <= '0;
+	end else if (store_ir_dmem_trans_transid_set) begin
+		store_ir_dmem_trans_transid_data_model_rs2 <= rs2_data_reg;
+	end
+end
+
+// additional destination register check
+reg [31:0] ir_rf_trans_transid_data_model_rd;
+always_ff @(posedge clk) begin
+	if(reset) begin
+		ir_rf_trans_transid_data_model_rd <= '0; 
+	end else if (ir_rf_trans_transid_set) begin
+		ir_rf_trans_transid_data_model_rd <= rd_reg;
+	end
 end
 
 always_ff @(posedge clk) begin
