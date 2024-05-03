@@ -167,7 +167,8 @@ reg [7:0] rob_commit_transid_reg;
 reg [3:0] head; 
 reg [3:0] tail; 
 
-wire [3:0] num_entries = (tail < head) ? (5'd17 - head + tail) : (tail - head); 
+reg  [4:0] num_entries_reg;
+wire [4:0] num_entries = num_entries_reg;
 
 //maximum number of entries is 16
 wire full = (num_entries > 16);
@@ -177,15 +178,28 @@ always @(posedge clk) begin
 		rob_commit_transid_reg <= 8'b0;
 		head <= 4'b0; 
 		tail <= 4'b0;
+		num_entries_reg <= 5'b0;
 	end
 	else begin
-		if (rob_alloc_req_val && rob_alloc_req_rdy) begin
+		// Only allocate
+		if (rob_alloc_req_val && rob_alloc_req_rdy && !rob_commit_val) begin
 			rob_alloc_req_transid_reg <= rob_alloc_req_transid_reg + 1 ;
 			tail <= tail + 4'b1; 
+			num_entries_reg <= num_entries_reg + 5'b1;
 		end
-		if (rob_commit_val) begin
+		// Only commit
+		else if (rob_commit_val && !(rob_alloc_req_val && rob_alloc_req_rdy)) begin
 			rob_commit_transid_reg <= rob_commit_transid_reg + 1;
 			head <= head + 4'b1; 
+			num_entries_reg <= num_entries_reg - 5'b1;
+		end
+		// Allocate and commit happen at the same time
+		else if (rob_commit_val && rob_alloc_req_val && rob_alloc_req_rdy) begin
+			rob_alloc_req_transid_reg <= rob_alloc_req_transid_reg + 1 ;
+			tail <= tail + 4'b1;
+			rob_commit_transid_reg <= rob_commit_transid_reg + 1;
+			head <= head + 4'b1; 
+			// num_entries_reg  doesn't get updated
 		end
 	end
 end
@@ -248,5 +262,8 @@ as_alloc_resp_slot_equal_tail: assert property ((rob_alloc_req_val && rob_alloc_
 //Assert that one cycle after getting filled the head gets commited
 // FIX: Only holds true for the head.
 as_head_commits_after_fill: assert property (((rob_fill_slot == head) && rob_fill_val) |-> ##1 ((rob_commit_slot == head) && rob_commit_wen));
+
+// Assert that the number of entries in the reorder buffer is correct
+as_num_entries_correct: assert property ((num_entries == riscv_CoreReorderBuffer.num_entries));
 
 endmodule

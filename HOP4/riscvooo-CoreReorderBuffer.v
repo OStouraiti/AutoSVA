@@ -12,8 +12,9 @@ module riscv_CoreReorderBuffer
     [4:0] rob_alloc_req_data = rob_alloc_req_preg
     rob_commit_val = rob_commit_wen
     [4:0] rob_commit_data = rob_commit_rf_waddr
-    [3:0] rob_alloc_req_transid = 4'b0
-    [3:0] rob_commit_transid = 4'b0
+    [3:0] rob_alloc_req_transid = rob_alloc_req_transid_reg
+    [3:0] rob_commit_transid = rob_commit_transid_reg
+
     rob_fill_commit_trans: rob_fill -IN> rob_commit
     [3:0] rob_fill_data = rob_fill_slot
     [3:0] rob_commit_data = rob_commit_slot
@@ -55,13 +56,12 @@ wire rob_commit_slot     = 5'b0;
   reg [3:0] head;
   reg [3:0] tail;
 
-  //head and tail out of bounds checking
-  //calculate the number of entries based on tail and head pointers
-  wire [3:0] num_entries = (tail[3] ^ head[3]) ? {1'b1, tail - head} 
-  :                                        tail - head; 
+  // Calculate the number of entries based on tail and head pointers
+  wire [4:0] num_entries = (tail < head) ? (5'd16 - head + tail) : (tail - head); 
 
-  //maximum number of entries is 16
+  // Maximum number of entries is 16
   wire full = (num_entries > 16);
+
   integer i;
   reg [4:0] rob [15:0][2:0];
   always @(posedge clk) begin
