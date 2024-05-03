@@ -41,7 +41,7 @@ module riscv_Core
     load_dmem_out_rdy = dmemresp_val
     load_dmem_out_val = ctrl.inst_val_Mhl && type_load_instr_Mhl && dmemreq_val_Mhl && !stall_Mhl_reg
     load_rf_rdy = 1'b1
-    load_rf_val = dpath.rf_wen_Whl && ctrl.inst_val_Whl
+    load_rf_val = dpath.rf_wen_Whl && ctrl.inst_val_Whl && type_load_instr_Whl;
     [31:0] load_dmem_out_data = load_dmem_out_data_reg
     [31:0] load_rf_data = load_rf_data_reg
 

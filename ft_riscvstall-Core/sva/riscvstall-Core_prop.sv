@@ -193,11 +193,14 @@ as__ir_rf_trans_transid_was_a_request: assert property (ir_rf_trans_transid_resp
 
 // Modeling data integrity for ir_rf_trans_transid
 reg [31:0] ir_rf_trans_transid_data_model;
+reg [31:0] ir_rf_trans_transid_data_model_rd;
 always_ff @(posedge clk) begin
 	if(reset) begin
 		ir_rf_trans_transid_data_model <= '0;
+		ir_rf_trans_transid_data_model_rd <= '0;
 	end else if (ir_rf_trans_transid_set) begin
 		ir_rf_trans_transid_data_model <= ir_data;
+		ir_rf_trans_transid_data_model_rd <= rd_reg;
 	end
 end
 
@@ -326,7 +329,7 @@ assign load_ir_transid = load_ir_transid_reg;
 assign load_dmem_out_rdy = dmemresp_val;
 assign store_dmem_val = ctrl.inst_val_Mhl && (!dmemreq_msg_rw_Mhl && dmemreq_val_Mhl) && type_store_instr_Mhl && !stall_Mhl_reg;
 assign load_dmem_data = dmemreq_msg_addr_Whl;
-assign load_rf_val = dpath.rf_wen_Whl && ctrl.inst_val_Whl;
+assign load_rf_val = dpath.rf_wen_Whl && ctrl.inst_val_Whl && type_load_instr_Whl;
 assign store_ir_rdy = !stall_Dhl_reg;
 assign rf_val = ctrl.inst_val_Whl && ctrl.rf_wen_Whl && (type_alu_r_instr_Whl || type_alu_i_instr_Whl);
 assign load_dmem_val = ctrl.inst_val_Mhl && (dmemreq_msg_rw_Mhl && dmemreq_val_Mhl) && type_load_instr_Mhl && !stall_Mhl_reg;
@@ -480,6 +483,10 @@ reg [7:0] load_rf_transid_reg;
 reg [7:0] load_dmem_out_transid_reg;
 reg [31:0] load_rf_data_reg;
 reg [31:0] load_dmem_out_data_reg;
+
+// Store Regs
+reg [7:0] store_ir_transid_reg;
+reg [7:0] store_dmem_transid_reg;
 
 // Wire definitions
 wire [31:0] rs1_data = dpath.rf_rdata0_Dhl;
@@ -737,6 +744,14 @@ always_ff @(posedge clk) begin
 
 		if (load_dmem_out_rdy && load_dmem_out_val) begin
 			load_dmem_out_transid_reg <= load_dmem_out_transid_reg + 8'b1;
+		end
+
+		if (store_ir_val && store_ir_rdy) begin 
+			store_ir_transid_reg <= store_ir_transid_reg + 8'b1; 
+		end
+
+		if (store_dmem_rdy && store_dmem_val) begin
+			store_dmem_transid_reg <= store_dmem_transid_reg + 8'b1; 
 		end
 	end
 end
