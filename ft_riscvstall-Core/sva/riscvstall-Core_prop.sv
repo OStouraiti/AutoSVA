@@ -501,7 +501,7 @@ reg [31:0] rs2_data_reg;
 
 // Wire definitions
 wire [31:0] rs1_data = dpath.rf_rdata0_Dhl;
-wire [31:0] rs2_data = dpath.rf_rdata1_Dhl;
+wire [31:0] rs2_data = dpath.rf_rdata1_Dhl; 
 
 // Parse the opcode
 wire [31:25] func7_t = ctrl.ir_Dhl[31:25]; 
@@ -640,9 +640,9 @@ assign type_load_instr_Dhl = type_lw_instr_Dhl || type_lb_instr_Dhl || type_lh_i
 assign type_load_instr_Mhl = type_lw_instr_Mhl || type_lb_instr_Mhl || type_lh_instr_Mhl || type_lbu_instr_Mhl || type_lhu_instr_Mhl;
 assign type_load_instr_Whl = type_lw_instr_Whl || type_lb_instr_Whl || type_lh_instr_Whl || type_lbu_instr_Whl || type_lhu_instr_Whl;
 
-assign type_store_instr_Dhl = type_sw_instr_Dhl;
-assign type_store_instr_Mhl = type_sw_instr_Mhl;
-assign type_store_instr_Whl = type_sw_instr_Whl;
+assign type_store_instr_Dhl = type_sw_instr_Dhl || type_sb_instr_Dhl || type_sh_instr_Dhl;
+assign type_store_instr_Mhl = type_sw_instr_Mhl || type_sb_instr_Mhl || type_sh_instr_Mhl;
+assign type_store_instr_Whl = type_sw_instr_Whl || type_sb_instr_Whl || type_sh_instr_Whl;
 
 // Calculate expected ALU output
 always_comb begin
@@ -816,7 +816,15 @@ always @(posedge clk) begin
 
 		if (store_ir_val) begin
 			store_mem_addr_reg <= store_mem_addr;
-			rs2_data_reg <= rs2_data;
+			if (type_sw_instr_Dhl) begin 
+				rs2_data_reg <= rs2_data;
+			end 
+			else if (type_sh_instr_Dhl) begin 
+				rs2_data_reg <= rs2_data & 32'hFFFF_FFFF;
+			end 
+			else if (type_sb_instr_Dhl) begin 
+				rs2_data_reg <= rs2_data & 16'hFFFF;
+			end 
 		end 
 
 		if (!ctrl.stall_Xhl && dmemreq_msg_rw_Xhl)  begin
@@ -834,7 +842,15 @@ always @(posedge clk) begin
 
 		if (store_dmem_val) begin
 			store_dmemreq_msg_addr_Whl <= store_dmemreq_msg_addr_Mhl;
-			dmemreq_msg_data_Whl <= dmemreq_msg_data_Mhl;
+			if (type_sw_instr_Mhl) begin 
+				dmemreq_msg_data_Whl <= dmemreq_msg_data_Mhl;
+			end 
+			else if (type_sh_instr_Mhl) begin 
+				dmemreq_msg_data_Whl <= dmemreq_msg_data_Mhl & 32'hFFFF_FFFF;
+			end 
+			else if (type_sb_instr_Mhl) begin 
+				dmemreq_msg_data_Whl <= dmemreq_msg_data_Mhl & 16'hFFFF;
+			end 
 		end
 
 		if (rf_val) begin
