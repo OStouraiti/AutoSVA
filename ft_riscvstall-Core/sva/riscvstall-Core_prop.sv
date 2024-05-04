@@ -167,7 +167,7 @@ always_ff @(posedge clk) begin
 end
 
 as__branch_ir_pc_transid_data_unique: assert property (|branch_ir_pc_transid_sampled |-> !branch_ir_pc_transid_set);
-as__branch_ir_pc_transid_data_integrity: assert property (|branch_ir_pc_transid_sampled && branch_ir_pc_transid_response |-> (branch_pc_data == branch_ir_pc_transid_data_model));// || (branch_pc_data == branch_ir_pc_transid_data_model - 32'd4)));
+as__branch_ir_pc_transid_data_integrity: assert property (|branch_ir_pc_transid_sampled && branch_ir_pc_transid_response |-> (branch_pc_data == branch_ir_pc_transid_data_model));
 
 // Modeling incoming request for load_dmem_rf_trans
 if (ASSERT_INPUTS) begin
@@ -590,8 +590,10 @@ reg [7:0] branch_pc_transid_reg;
 reg [31:0] calculated_pc_reg;
 reg [31:0] calculated_pc;
 reg [31:0] branch_pc_data_reg;
-reg [31:0] branch_taken_Dhl; 
-reg [31:0] branch_taken_Xhl; 
+reg branch_taken_Dhl; 
+reg branch_taken_Xhl; 
+reg [31:0] rs1_data_reg; 
+reg [31:0] rs2_data_reg; 
 
 // Wire definitions
 wire [31:0] rs1_data = dpath.rf_rdata0_Dhl;
@@ -840,6 +842,7 @@ always_comb begin
 		store_mem_addr = (rs1_data + $signed(i_immediate_12_bits_store));
 	end
 
+	// calculate beq next address
 	if (type_beq_instr_Dhl) begin
 		calculated_pc = (rs1_data == rs2_data) ? dpath.pc_Dhl + $signed(i_immediate_12_bits_branch) : dpath.pc_Dhl + 32'd12;
 		branch_taken_Dhl = (rs1_data == rs2_data);
@@ -931,6 +934,7 @@ always_ff @(posedge clk) begin
 	end
 end
 
+// output regs
 always @(posedge clk) begin
 	if (reset) begin
 		alu_output_reg <= 32'b0;
@@ -952,6 +956,8 @@ always @(posedge clk) begin
 		calculated_pc_reg <= 32'b0;
 		branch_pc_data_reg <= 32'b0; 
 		branch_taken_Xhl <= 32'b0; 
+		rs1_data_reg <= 32'b0;
+		rs2_data_reg <= 32'b0; 
 	end
 
 	else begin
@@ -1044,6 +1050,9 @@ always @(posedge clk) begin
 			branch_pc_data_reg <= (branch_taken_Xhl || (!branch_taken_Xhl && !stall_Fhl_reg)) ? dpath.imemreq_msg_addr : (dpath.imemreq_msg_addr + 32'd4); //CHANGE here
 			// branch_pc_data_reg <= dpath.imemreq_msg_addr;
 		end
+
+		rs1_data_reg <= rs1_data;
+		rs2_data_reg <= rs2_data; 
 	end
 end
 
@@ -1071,4 +1080,11 @@ as__ir_rf_trans_transid_data_integrity_rd: assert property (|ir_rf_trans_transid
 // Stores: Assert that data written to memory matches value read from rs2
 as__store_ir_dmem_trans_transid_data_integrity_rs2: assert property (|store_ir_dmem_trans_transid_sampled && store_ir_dmem_trans_transid_response && type_store_instr_Whl |-> (dmemreq_msg_data_Whl == store_ir_dmem_trans_transid_data_model_rs2));
 
+// Branches: Assert that if you have a branch taken, that there will be squashes will be the decode and fetch stage
+as__branch_squash_fetch_decode: assert property ((ctrl.inst_val_Xhl && type_branch_instr_Xhl && (rs1_data_reg == rs2_data_reg)) |-> ctrl.squash_Fhl && ctrl.squash_Dhl);
+
+// Assert if bubble in current stage, will be propagated to the next stage
+as__branch_bubble_next_stage_D_X: assert property ((ctrl.bubble_Dhl && !ctrl.stall_Xhl) |-> ##1 ctrl.bubble_Xhl); 
+as__branch_bubble_next_stage_X_M: assert property ((ctrl.bubble_Xhl && !ctrl.stall_Mhl) |-> ##1 ctrl.bubble_Mhl); 
+as__branch_bubble_next_stage_M_W: assert property ((ctrl.bubble_Mhl && !ctrl.stall_Whl) |-> ##1 ctrl.bubble_Whl); 
 endmodule

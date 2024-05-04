@@ -63,9 +63,8 @@ module riscv_Core
     branch_ir_val = ctrl.inst_val_Dhl && type_branch_instr_Dhl
     branch_pc_rdy = 1'b1
     branch_pc_val = ctrl.inst_val_Xhl && type_branch_instr_Xhl
-    [31:0] branch_ir_data = branch_ir_data_reg
+    [31:0] branch_ir_data = calculated_pc_reg
     [31:0] branch_pc_data = branch_pc_data_reg
-
   */
 
   input         clk,
