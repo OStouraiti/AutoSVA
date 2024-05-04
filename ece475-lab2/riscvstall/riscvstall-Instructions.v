@@ -26,7 +26,13 @@ module riscv_Instructions (
     output          type_lhu_instr,
     output          type_sw_instr,
     output          type_sb_instr,
-    output          type_sh_instr
+    output          type_sh_instr,
+    output          type_beq_instr,
+    output          type_bne_instr,
+    output          type_blt_instr,
+    output          type_bge_instr,
+    output          type_bltu_instr,
+    output          type_bgeu_instr
 );
 
 // ALU R-type
@@ -64,5 +70,12 @@ assign type_sw_instr = (instr[14:12] == 3'b010) && (instr[6:0] == 7'b0100011);
 assign type_sb_instr = (instr[14:12] == 3'b000) && (instr[6:0] == 7'b0100011);
 assign type_sh_instr = (instr[14:12] == 3'b001) && (instr[6:0] == 7'b0100011);
 
+// Branch
+assign type_beq_instr = (instr[14:12] == 3'b000) && (instr[6:0] == 7'b1100011 );
+assign type_bne_instr = (instr[14:12] == 3'b001) && (instr[6:0] == 7'b1100011 );
+assign type_blt_instr = (instr[14:12] == 3'b100) && (instr[6:0] == 7'b1100011 );
+assign type_bge_instr = (instr[14:12] == 3'b101) && (instr[6:0] == 7'b1100011 );
+assign type_bltu_instr = (instr[14:12] == 3'b110) && (instr[6:0] == 7'b1100011 );
+assign type_bgeu_instr = (instr[14:12] == 3'b111) && (instr[6:0] == 7'b1100011 );
 
 endmodule
