@@ -56,7 +56,7 @@ module riscv_Core
     [31:0] store_ir_data = store_mem_addr_reg
     [31:0] store_dmem_data = store_dmemreq_msg_addr_Whl
 
-    branch_ir_pc: branch_ir -IN> branch_pc
+    branch_ir_pc_trans: branch_ir -IN> branch_pc
     [7:0] branch_ir_transid = branch_ir_transid_reg
     [7:0] branch_pc_transid = branch_pc_transid_reg
     branch_ir_rdy = !stall_Dhl_reg;
@@ -65,6 +65,16 @@ module riscv_Core
     branch_pc_val = ctrl.inst_val_Xhl && type_branch_instr_Xhl
     [31:0] branch_ir_data = calculated_pc_reg
     [31:0] branch_pc_data = branch_pc_data_reg
+
+    jal_ir_rf_trans: jal_ir -IN> jal_rf
+    [7:0] jal_ir_transid = jal_ir_transid_reg
+    [7:0] jal_rf_transid = jal_rf_transid_reg
+    jal_ir_rdy = !stall_Dhl_reg;
+    jal_ir_val = ctrl.inst_val_Dhl && type_jal_instr_Dhl
+    jal_rf_rdy = 1'b1
+    jal_rf_val = ctrl.inst_val_Whl && ctrl.rf_wen_Whl && type_jal_instr_Whl
+    [31:0] jal_ir_data = calculated_pc_jal_reg
+    [31:0] jal_rf_data = jal_rf_data_reg
   */
 
   input         clk,
