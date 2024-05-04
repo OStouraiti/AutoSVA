@@ -533,6 +533,8 @@ wire type_bge_instr_Xhl;
 wire type_bltu_instr_Xhl;
 wire type_bgeu_instr_Xhl;
 
+wire branch_taken_condition;
+
 wire type_branch_instr_Dhl;
 wire type_branch_instr_Xhl;
 
@@ -759,9 +761,16 @@ assign type_store_instr_Dhl = type_sw_instr_Dhl || type_sb_instr_Dhl || type_sh_
 assign type_store_instr_Mhl = type_sw_instr_Mhl || type_sb_instr_Mhl || type_sh_instr_Mhl;
 assign type_store_instr_Whl = type_sw_instr_Whl || type_sb_instr_Whl || type_sh_instr_Whl;
 
-assign type_branch_instr_Dhl = type_beq_instr_Dhl;
-assign type_branch_instr_Xhl = type_beq_instr_Xhl;
+assign type_branch_instr_Dhl = type_beq_instr_Dhl || type_bne_instr_Dhl || type_blt_instr_Dhl || type_bge_instr_Dhl  || type_bltu_instr_Dhl  || type_bgeu_instr_Dhl;
+assign type_branch_instr_Xhl = type_beq_instr_Xhl || type_bne_instr_Xhl || type_blt_instr_Xhl || type_bge_instr_Xhl || type_bltu_instr_Xhl || type_bgeu_instr_Xhl;
 
+assign branch_taken_condition = type_beq_instr_Xhl ? rs1_data_reg == rs2_data_reg :
+								type_bne_instr_Xhl ? rs1_data_reg != rs2_data_reg :
+								type_blt_instr_Xhl ? $signed(rs1_data_reg) < $signed(rs2_data_reg) :
+								type_bge_instr_Xhl ? $signed(rs1_data_reg) >= $signed(rs2_data_reg) :
+								type_bltu_instr_Xhl ? $unsigned(rs1_data_reg) < $unsigned(rs2_data_reg) :
+								type_bgeu_instr_Xhl ? rs1_data_reg >= rs2_data_reg :
+								1'bx;
 // Calculate expected ALU output
 always_comb begin
 	alu_output = 32'bx;
@@ -847,7 +856,31 @@ always_comb begin
 		calculated_pc = (rs1_data == rs2_data) ? dpath.pc_Dhl + $signed(i_immediate_12_bits_branch) : dpath.pc_Dhl + 32'd12;
 		branch_taken_Dhl = (rs1_data == rs2_data);
 	end
+
+	if (type_bne_instr_Dhl) begin
+		calculated_pc = (rs1_data != rs2_data) ? dpath.pc_Dhl + $signed(i_immediate_12_bits_branch) : dpath.pc_Dhl + 32'd12;
+		branch_taken_Dhl = (rs1_data != rs2_data);
+	end
+
+	if (type_blt_instr_Dhl) begin
+		calculated_pc = ($signed(rs1_data) < $signed(rs2_data)) ? dpath.pc_Dhl + $signed(i_immediate_12_bits_branch) : dpath.pc_Dhl + 32'd12;
+		branch_taken_Dhl = ($signed(rs1_data) < $signed(rs2_data));
+	end
+
+	if (type_bge_instr_Dhl) begin
+		calculated_pc = ($signed(rs1_data) >= $signed(rs2_data)) ? dpath.pc_Dhl + $signed(i_immediate_12_bits_branch) : dpath.pc_Dhl + 32'd12;
+		branch_taken_Dhl = ($signed(rs1_data) >= $signed(rs2_data));
+	end
 	
+	if (type_bltu_instr_Dhl) begin
+		calculated_pc = ($unsigned(rs1_data) < $unsigned(rs2_data)) ? dpath.pc_Dhl + $signed(i_immediate_12_bits_branch) : dpath.pc_Dhl + 32'd12;
+		branch_taken_Dhl = ($unsigned(rs1_data) < $unsigned(rs2_data));
+	end
+
+	if (type_bgeu_instr_Dhl) begin
+		calculated_pc = (rs1_data >= rs2_data) ? dpath.pc_Dhl + $signed(i_immediate_12_bits_branch) : dpath.pc_Dhl + 32'd12;
+		branch_taken_Dhl = (rs1_data >= rs2_data);
+	end
 end 
 
 // Implement flip-flops needed for data integrity checks
@@ -1081,7 +1114,7 @@ as__ir_rf_trans_transid_data_integrity_rd: assert property (|ir_rf_trans_transid
 as__store_ir_dmem_trans_transid_data_integrity_rs2: assert property (|store_ir_dmem_trans_transid_sampled && store_ir_dmem_trans_transid_response && type_store_instr_Whl |-> (dmemreq_msg_data_Whl == store_ir_dmem_trans_transid_data_model_rs2));
 
 // Branches: Assert that if you have a branch taken, that there will be squashes will be the decode and fetch stage
-as__branch_squash_fetch_decode: assert property ((ctrl.inst_val_Xhl && type_branch_instr_Xhl && (rs1_data_reg == rs2_data_reg)) |-> ctrl.squash_Fhl && ctrl.squash_Dhl);
+as__branch_squash_fetch_decode: assert property ((ctrl.inst_val_Xhl && type_branch_instr_Xhl && branch_taken_condition) |-> ctrl.squash_Fhl && ctrl.squash_Dhl);
 
 // Assert if bubble in current stage, will be propagated to the next stage
 as__branch_bubble_next_stage_D_X: assert property ((ctrl.bubble_Dhl && !ctrl.stall_Xhl) |-> ##1 ctrl.bubble_Xhl); 
