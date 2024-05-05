@@ -953,12 +953,12 @@ always_comb begin
 	end 
 
 	if (type_rem_instr_Dhl) begin
-		unsigned_res = unsigned_a / unsigned_b;
+		unsigned_res = unsigned_a % unsigned_b;
 		alu_output = (rs1_data[31] ^ rs2_data[31]) ? ~unsigned_res + 32'b1 : unsigned_res; 
 	end 
 
 	if (type_remu_instr_Dhl) begin
-		unsigned_res = unsigned_a / unsigned_b;
+		unsigned_res = unsigned_a % unsigned_b;
 		alu_output = unsigned_res; 
 	end 
 
