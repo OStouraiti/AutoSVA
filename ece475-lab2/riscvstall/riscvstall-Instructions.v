@@ -33,7 +33,8 @@ module riscv_Instructions (
     output          type_bge_instr,
     output          type_bltu_instr,
     output          type_bgeu_instr,
-    output          type_jal_instr
+    output          type_jal_instr,
+    output          type_jalr_instr
 );
 
 // ALU R-type
@@ -79,7 +80,8 @@ assign type_bge_instr = (instr[14:12] == 3'b101) && (instr[6:0] == 7'b1100011 );
 assign type_bltu_instr = (instr[14:12] == 3'b110) && (instr[6:0] == 7'b1100011 );
 assign type_bgeu_instr = (instr[14:12] == 3'b111) && (instr[6:0] == 7'b1100011 );
 
-// Jal
+// Jal and Jalr
 assign type_jal_instr = ( instr[6:0] == 7'b1101111 );  
+assign type_jalr_instr = ( (instr[14:12] == 3'b0) && (instr[6:0] == 7'b1100111) );  
 
 endmodule

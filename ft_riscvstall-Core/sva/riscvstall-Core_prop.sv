@@ -419,14 +419,14 @@ as__load_ir_dmem_trans_transid_data_integrity: assert property (|load_ir_dmem_tr
 assign store_ir_transid = store_ir_transid_reg;
 assign ir_val = ctrl.inst_val_Dhl && (type_alu_r_instr_Dhl || type_alu_i_instr_Dhl);
 assign jal_rf_data = jal_rf_data_reg;
-assign jal_ir_val = ctrl.inst_val_Dhl && type_jal_instr_Dhl;
+assign jal_ir_val = ctrl.inst_val_Dhl && (type_jal_instr_Dhl || type_jalr_instr_Dhl);
 assign load_dmem_transid = load_dmem_transid_reg;
 assign rf_rdy = 1'b1;
 assign ir_data = alu_output_reg;
 assign jal_rf_rdy = 1'b1;
 assign load_ir_rdy = !stall_Dhl_reg;
 assign load_rf_transid = load_rf_transid_reg;
-assign jal_rf_val = ctrl.inst_val_Whl && ctrl.rf_wen_Whl && type_jal_instr_Whl;
+assign jal_rf_val = ctrl.inst_val_Whl && ctrl.rf_wen_Whl && (type_jal_instr_Whl || type_jalr_instr_Whl);
 assign ir_transid = ir_transid_reg;
 assign ir_rdy = !stall_Dhl_reg;
 assign load_rf_data = load_rf_data_reg;
@@ -610,6 +610,10 @@ wire type_bgeu_instr_Xhl;
 wire type_jal_instr_Dhl;
 wire type_jal_instr_Whl;
 
+// JALR
+wire type_jalr_instr_Dhl;
+wire type_jalr_instr_Whl;
+
 wire branch_taken_condition;
 
 wire type_branch_instr_Dhl;
@@ -737,7 +741,8 @@ riscv_Instructions instructions_decode
 	.type_bge_instr(type_bge_instr_Dhl),
 	.type_bltu_instr(type_bltu_instr_Dhl),
 	.type_bgeu_instr(type_bgeu_instr_Dhl),
-	.type_jal_instr(type_jal_instr_Dhl)
+	.type_jal_instr(type_jal_instr_Dhl),
+	.type_jalr_instr(type_jalr_instr_Dhl)
 ); 
 
 // Parse the instruction in the X stage
@@ -797,7 +802,8 @@ riscv_Instructions instructions_writeback
 	.type_sw_instr(type_sw_instr_Whl),
 	.type_sb_instr(type_sb_instr_Whl),
 	.type_sh_instr(type_sh_instr_Whl),
-	.type_jal_instr(type_jal_instr_Whl)
+	.type_jal_instr(type_jal_instr_Whl),
+	.type_jalr_instr(type_jalr_instr_Whl)
 );
 
 wire type_alu_r_instr_Dhl = type_add_instr_Dhl || 
@@ -976,6 +982,11 @@ always_comb begin
 	if (type_jal_instr_Dhl) begin
 		calculated_stored_pc_jal = dpath.pc_Dhl + 32'd4; 
 		calculated_pc_jal = dpath.pc_Dhl + j_immediate_20_bits_branch;
+	end 
+
+	if (type_jalr_instr_Dhl) begin
+		calculated_stored_pc_jal = dpath.pc_Dhl + 32'd4; 
+		calculated_pc_jal = (i_immediate_12_bits + rs1_data) & 32'hFFFF_FFFE;
 	end 
 end 
 
@@ -1210,7 +1221,7 @@ end
 
 // Assumptions
 // Assume valid opcode
-am_val_instr: assume property (type_alu_r_instr_Dhl || type_alu_i_instr_Dhl || type_load_instr_Dhl || type_store_instr_Dhl || type_branch_instr_Dhl || type_jal_instr_Dhl);
+am_val_instr: assume property (type_alu_r_instr_Dhl || type_alu_i_instr_Dhl || type_load_instr_Dhl || type_store_instr_Dhl || type_branch_instr_Dhl || type_jal_instr_Dhl || type_jalr_instr_Dhl);
 
 // Assume that the imemreq and imemresp_val happen at the same cycle
 am_imemreq_imemval_same_cycle: assume property (!imemreq_val |-> !imemresp_val);
@@ -1223,7 +1234,7 @@ am_dmemreq_imemval_same_cycle: assume property (dmemreq_val |-> ##1 dmemresp_val
 
 // Assertions
 // Assert that the read ports to the register file match  rs1 and rs2 from the opcode
-as_rs1_match: assert property ((type_alu_r_instr_Dhl || type_alu_i_instr_Dhl || type_load_instr_Dhl || type_store_instr_Dhl || type_branch_instr_Dhl || type_jal_instr_Dhl) && ctrl.inst_val_Dhl |-> (rs1 == dpath.rf_raddr0_Dhl));
+as_rs1_match: assert property ((type_alu_r_instr_Dhl || type_alu_i_instr_Dhl || type_load_instr_Dhl || type_store_instr_Dhl || type_branch_instr_Dhl || type_jalr_instr_Dhl) && ctrl.inst_val_Dhl |-> (rs1 == dpath.rf_raddr0_Dhl));
 as_rs2_match: assert property ((type_alu_r_instr_Dhl || type_alu_i_instr_Dhl || type_store_instr_Dhl || type_branch_instr_Dhl || type_jal_instr_Dhl) && ctrl.inst_val_Dhl |-> (rs2 == dpath.rf_raddr1_Dhl)); 
 
 // Assert that rd in W stage matches rd of the decoded instruction for the same transid
@@ -1235,15 +1246,18 @@ as__store_ir_dmem_trans_transid_data_integrity_rs2: assert property (|store_ir_d
 // Branches: Assert that if you have a branch taken, that there will be squashes will be the decode and fetch stage
 as__branch_squash_fetch_decode: assert property ((ctrl.inst_val_Xhl && type_branch_instr_Xhl && branch_taken_condition) |-> ctrl.squash_Fhl && ctrl.squash_Dhl);
 
-// JAL: Assert that when JAL decoded, there will be squash in the fetch stage
-as__jal_squash_fetch: assert property (ctrl.inst_val_Dhl && type_jal_instr_Dhl |-> ctrl.squash_Fhl);
+// JAL/JALR: Assert that when JAL or JALR decoded, there will be squash in the fetch stage
+as__jal_squash_fetch: assert property (ctrl.inst_val_Dhl && (type_jal_instr_Dhl || type_jalr_instr_Dhl) |-> ctrl.squash_Fhl);
 
-// JAL: Assert that when JAL decoded, the correct PC + immediate is done
-as__jal_ir_pc_trans_transid_data_integrity: assert property (ctrl.inst_val_Dhl && type_jal_instr_Dhl |-> (calculated_pc_jal == dpath.imemreq_msg_addr));
+// JAL/JALR: Assert that when JAL or JALR decoded, the correct PC + immediate is done
+as__jal_ir_pc_trans_transid_data_integrity: assert property (ctrl.inst_val_Dhl && (type_jal_instr_Dhl || type_jalr_instr_Dhl) |-> (calculated_pc_jal == dpath.imemreq_msg_addr));
 
 // Assert if bubble in current stage, will be propagated to the next stage
-as__squash_bubble_next_stage_F_D: assert property ((ctrl.squash_Fhl || ctrl.stall_Fhl || ctrl.bubble_Fhl) && !ctrl.stall_Dhl |-> ##1 ctrl.bubble_Dhl); 
 as__branch_bubble_next_stage_D_X: assert property ((ctrl.bubble_Dhl && !ctrl.stall_Xhl) |-> ##1 ctrl.bubble_Xhl); 
 as__branch_bubble_next_stage_X_M: assert property ((ctrl.bubble_Xhl && !ctrl.stall_Mhl) |-> ##1 ctrl.bubble_Mhl); 
 as__branch_bubble_next_stage_M_W: assert property ((ctrl.bubble_Mhl && !ctrl.stall_Whl) |-> ##1 ctrl.bubble_Whl); 
+
+// Assert if squashed in the current stage, a bubble will be propagated to the next stage
+as__squash_bubble_next_stage_F_D: assert property ((ctrl.squash_Fhl || ctrl.stall_Fhl || ctrl.bubble_Fhl) && !ctrl.stall_Dhl |-> ##1 ctrl.bubble_Dhl); 
+as__squash_bubble_next_stage_D_X: assert property ((ctrl.squash_Dhl && !ctrl.stall_Xhl) |-> ##1 ctrl.bubble_Xhl); 
 endmodule

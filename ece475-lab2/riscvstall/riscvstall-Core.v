@@ -70,10 +70,10 @@ module riscv_Core
     [7:0] jal_ir_transid = jal_ir_transid_reg
     [7:0] jal_rf_transid = jal_rf_transid_reg
     jal_ir_rdy = !stall_Dhl_reg;
-    jal_ir_val = ctrl.inst_val_Dhl && type_jal_instr_Dhl
+    jal_ir_val = ctrl.inst_val_Dhl && (type_jal_instr_Dhl || type_jalr_instr_Dhl)
     jal_rf_rdy = 1'b1
-    jal_rf_val = ctrl.inst_val_Whl && ctrl.rf_wen_Whl && type_jal_instr_Whl
-    [31:0] jal_ir_data = calculated_pc_jal_reg
+    jal_rf_val = ctrl.inst_val_Whl && ctrl.rf_wen_Whl && (type_jal_instr_Whl || type_jalr_instr_Whl)
+    [31:0] jal_ir_data = calculated_stored_pc_jal_reg
     [31:0] jal_rf_data = jal_rf_data_reg
   */
 
