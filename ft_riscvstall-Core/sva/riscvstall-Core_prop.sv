@@ -518,6 +518,11 @@ wire type_srl_instr_Dhl;
 wire type_sra_instr_Dhl;
 wire type_or_instr_Dhl;
 wire type_and_instr_Dhl;
+wire type_mul_instr_Dhl;
+wire type_div_instr_Dhl;
+wire type_divu_instr_Dhl;
+wire type_rem_instr_Dhl;
+wire type_remu_instr_Dhl;
 
 wire type_add_instr_Whl;
 wire type_sub_instr_Whl;
@@ -529,6 +534,11 @@ wire type_srl_instr_Whl;
 wire type_sra_instr_Whl;
 wire type_or_instr_Whl;
 wire type_and_instr_Whl;
+wire type_mul_instr_Whl;
+wire type_div_instr_Whl;
+wire type_divu_instr_Whl;
+wire type_rem_instr_Whl;
+wire type_remu_instr_Whl;
 
 // ALU I-type
 wire type_addi_instr_Dhl;
@@ -718,6 +728,11 @@ riscv_Instructions instructions_decode
     .type_sra_instr(type_sra_instr_Dhl),
     .type_or_instr(type_or_instr_Dhl),
     .type_and_instr(type_and_instr_Dhl),
+	.type_mul_instr(type_mul_instr_Dhl),
+	.type_div_instr(type_div_instr_Dhl),
+	.type_divu_instr(type_divu_instr_Dhl),
+	.type_rem_instr(type_rem_instr_Dhl),
+	.type_remu_instr(type_remu_instr_Dhl),
 	.type_addi_instr(type_addi_instr_Dhl),
     .type_slli_instr(type_slli_instr_Dhl),
     .type_slti_instr(type_slti_instr_Dhl),
@@ -785,6 +800,11 @@ riscv_Instructions instructions_writeback
     .type_sra_instr(type_sra_instr_Whl),
     .type_or_instr(type_or_instr_Whl),
     .type_and_instr(type_and_instr_Whl),
+	.type_mul_instr(type_mul_instr_Whl),
+	.type_div_instr(type_div_instr_Whl),
+	.type_divu_instr(type_divu_instr_Whl),
+	.type_rem_instr(type_rem_instr_Whl),
+	.type_remu_instr(type_remu_instr_Whl),
 	.type_addi_instr(type_addi_instr_Whl),
     .type_slli_instr(type_slli_instr_Whl),
     .type_slti_instr(type_slti_instr_Whl),
@@ -815,7 +835,12 @@ wire type_alu_r_instr_Dhl = type_add_instr_Dhl ||
 							type_srl_instr_Dhl ||
 							type_sra_instr_Dhl ||
 							type_or_instr_Dhl ||
-							type_and_instr_Dhl;
+							type_and_instr_Dhl || 
+							type_mul_instr_Dhl || 
+							type_div_instr_Dhl || 
+							type_divu_instr_Dhl || 
+							type_rem_instr_Dhl || 
+							type_remu_instr_Dhl ; 
 
 wire type_alu_r_instr_Whl = type_add_instr_Whl || 
 							type_sub_instr_Whl || 
@@ -826,7 +851,12 @@ wire type_alu_r_instr_Whl = type_add_instr_Whl ||
 							type_srl_instr_Whl ||
 							type_sra_instr_Whl ||
 							type_or_instr_Whl ||
-							type_and_instr_Whl;
+							type_and_instr_Whl || 
+							type_mul_instr_Whl || 
+							type_div_instr_Whl || 
+							type_divu_instr_Whl || 
+							type_rem_instr_Whl || 
+							type_remu_instr_Whl ;
 
 wire type_alu_i_instr_Dhl = type_addi_instr_Dhl || 
 							type_slli_instr_Dhl || 
@@ -907,6 +937,30 @@ always_comb begin
 	if (type_and_instr_Dhl) begin
 		alu_output = (rs1_data & rs2_data);
 	end
+	if (type_mul_instr_Dhl) begin
+		unsigned_res = unsigned_a * unsigned_b;
+		alu_output = (rs1_data[31] ^ rs2_data[31]) ? ~unsigned_res + 32'b1 : unsigned_res; 
+	end 
+
+	if (type_div_instr_Dhl) begin
+		unsigned_res = unsigned_a / unsigned_b;
+		alu_output = (rs1_data[31] ^ rs2_data[31]) ? ~unsigned_res + 32'b1 : unsigned_res; 
+	end 
+
+	if (type_divu_instr_Dhl) begin
+		unsigned_res = unsigned_a / unsigned_b;
+		alu_output = unsigned_res; 
+	end 
+
+	if (type_rem_instr_Dhl) begin
+		unsigned_res = unsigned_a / unsigned_b;
+		alu_output = (rs1_data[31] ^ rs2_data[31]) ? ~unsigned_res + 32'b1 : unsigned_res; 
+	end 
+
+	if (type_remu_instr_Dhl) begin
+		unsigned_res = unsigned_a / unsigned_b;
+		alu_output = unsigned_res; 
+	end 
 
 	// ALU I type instructions
 	if (type_addi_instr_Dhl) begin

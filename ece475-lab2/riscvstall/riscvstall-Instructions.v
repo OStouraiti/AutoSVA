@@ -10,6 +10,11 @@ module riscv_Instructions (
     output          type_sra_instr,
     output          type_or_instr,
     output          type_and_instr,
+    output          type_mul_instr, 
+    output          type_div_instr, 
+    output          type_divu_instr, 
+    output          type_rem_instr, 
+    output          type_remu_instr, 
     output          type_addi_instr,
     output          type_slti_instr,
     output          type_sltiu_instr,
@@ -48,6 +53,11 @@ assign type_srl_instr = (instr[31:25] == 7'b0)       && (instr[14:12] == 3'b101)
 assign type_sra_instr = (instr[31:25] == 7'b0100000) && (instr[14:12] == 3'b101) && (instr[6:0] == 7'b0110011);
 assign type_or_instr = (instr[31:25] == 7'b0)        && (instr[14:12] == 3'b110) && (instr[6:0] == 7'b0110011);
 assign type_and_instr = (instr[31:25] == 7'b0)       && (instr[14:12] == 3'b111) && (instr[6:0] == 7'b0110011);
+assign type_mul_instr = (instr[31:25] == 7'b0000001) && (instr[14:12] == 3'b000) && (instr[6:0] == 7'b0110011);
+assign type_div_instr = (instr[31:25] == 7'b0000001) && (instr[14:12] == 3'b100) && (instr[6:0] == 7'b0110011);
+assign type_divu_instr = (instr[31:25] == 7'b0000001) && (instr[14:12] == 3'b101) && (instr[6:0] == 7'b0110011);
+assign type_rem_instr = (instr[31:25] == 7'b0000001) && (instr[14:12] == 3'b110) && (instr[6:0] == 7'b0110011);
+assign type_remu_instr = (instr[31:25] == 7'b0000001) && (instr[14:12] == 3'b111) && (instr[6:0] == 7'b0110011);
 
 // ALU I-type
 assign type_addi_instr = (instr[14:12] == 3'b0)  && (instr[6:0] == 7'b0010011);
