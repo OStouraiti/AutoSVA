@@ -773,7 +773,7 @@ wire [31:0] rs1_data = !(rs1_byp) ? dpath.rf_rdata0_Dhl :
 						(rs1_M_byp) ? dpath.wb_mux_out_Mhl : 
 						(rs1_W_byp) ? dpath.wb_mux_out_Whl :
 						32'bx ;
-wire [31:0] rs2_data =  (rs2_byp) ? dpath.rf_rdata1_Dhl : 
+wire [31:0] rs2_data =  !(rs2_byp) ? dpath.rf_rdata1_Dhl : 
 						(rs2_X_byp) ?  dpath.execute_mux_out_Xhl :
 						(rs2_M_byp) ? dpath.wb_mux_out_Mhl : 
 						(rs2_W_byp) ? dpath.wb_mux_out_Whl :
@@ -924,8 +924,8 @@ riscv_Instructions instructions_memory
 	.type_sw_instr(type_sw_instr_Mhl),
 	.type_sb_instr(type_sb_instr_Mhl),
 	.type_sh_instr(type_sh_instr_Mhl), 
-	.type_jal_instr(type_jal_instr_Xhl),
-	.type_jalr_instr(type_jalr_instr_Xhl)
+	.type_jal_instr(type_jal_instr_Mhl),
+	.type_jalr_instr(type_jalr_instr_Mhl)
 ); 
 
 // Parse the instruction in the W stage
@@ -968,12 +968,7 @@ riscv_Instructions instructions_writeback
 	.type_jalr_instr(type_jalr_instr_Whl)
 );
 
-wire type_alu_r_instr_Dhl = type_mul_instr_Dhl || 
-							type_div_instr_Dhl || 
-							type_divu_instr_Dhl || 
-							type_rem_instr_Dhl || 
-							type_remu_instr_Dhl ||
-							type_add_instr_Dhl || 
+wire type_alu_r_instr_Dhl = type_add_instr_Dhl || 
 							type_sub_instr_Dhl || 
 							type_sll_instr_Dhl || 
 							type_slt_instr_Dhl ||
@@ -983,6 +978,11 @@ wire type_alu_r_instr_Dhl = type_mul_instr_Dhl ||
 							type_sra_instr_Dhl ||
 							type_or_instr_Dhl ||
 							type_and_instr_Dhl; 
+							/*type_mul_instr_Dhl || 
+							type_div_instr_Dhl || 
+							type_divu_instr_Dhl || 
+							type_rem_instr_Dhl || 
+							type_remu_instr_Dhl || */
 
 wire type_alu_r_instr_Xhl = type_mul_instr_Xhl || 
 							type_div_instr_Xhl || 
@@ -1472,7 +1472,7 @@ end
 
 // Assumptions
 // Assume valid opcode
-am_val_instr: assume property (type_alu_r_instr_Dhl || type_alu_i_instr_Dhl);  //|| type_load_instr_Dhl || type_store_instr_Dhl || type_branch_instr_Dhl || type_jal_instr_Dhl || type_jalr_instr_Dhl);
+am_val_instr: assume property (type_alu_r_instr_Dhl || type_alu_i_instr_Dhl || type_store_instr_Dhl || type_jal_instr_Dhl || type_jalr_instr_Dhl);  //|| type_load_instr_Dhl || type_branch_instr_Dhl 
 
 // Assume that the imemreq and imemresp_val happen at the same cycle
 am_imemreq_imemval_same_cycle: assume property (!imemreq_val |-> !imemresp_val);
