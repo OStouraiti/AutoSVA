@@ -749,7 +749,7 @@ reg jump_taken_after_branch_reg;
 reg [31:0] calculated_pc_jal; 
 
 //instructions that use these registers
-wire instr_use_rs1_Dhl = type_alu_i_instr_Dhl || type_alu_r_instr_Dhl || type_load_instr_Dhl || type_store_instr_Dhl || type_branch_instr_Dhl; 
+wire instr_use_rs1_Dhl = type_alu_i_instr_Dhl || type_alu_r_instr_Dhl || type_load_instr_Dhl || type_store_instr_Dhl || type_branch_instr_Dhl || type_jalr_instr_Dhl; 
 wire instr_use_rs2_Dhl = type_alu_i_instr_Dhl || type_alu_r_instr_Dhl || type_store_instr_Dhl || type_branch_instr_Dhl; 
 wire instr_use_rd_Xhl =  type_alu_i_instr_Xhl || type_alu_r_instr_Xhl || type_load_instr_Xhl || type_jal_instr_Xhl || type_jalr_instr_Xhl;
 wire instr_use_rd_Mhl =  type_alu_i_instr_Mhl || type_alu_r_instr_Mhl || type_load_instr_Mhl || type_jal_instr_Mhl || type_jalr_instr_Mhl;
@@ -773,6 +773,7 @@ wire [31:0] rs1_data = !(rs1_byp) ? dpath.rf_rdata0_Dhl :
 						(rs1_M_byp) ? dpath.wb_mux_out_Mhl : 
 						(rs1_W_byp) ? dpath.wb_mux_out_Whl :
 						32'bx ;
+
 wire [31:0] rs2_data =  !(rs2_byp) ? dpath.rf_rdata1_Dhl : 
 						(rs2_X_byp) ?  dpath.execute_mux_out_Xhl :
 						(rs2_M_byp) ? dpath.wb_mux_out_Mhl : 
@@ -1472,7 +1473,7 @@ end
 
 // Assumptions
 // Assume valid opcode
-am_val_instr: assume property (type_alu_r_instr_Dhl || type_alu_i_instr_Dhl || type_store_instr_Dhl || type_jal_instr_Dhl || type_jalr_instr_Dhl);  //|| type_load_instr_Dhl || type_branch_instr_Dhl 
+am_val_instr: assume property (type_alu_r_instr_Dhl || type_alu_i_instr_Dhl || type_load_instr_Dhl || type_store_instr_Dhl || type_branch_instr_Dhl || type_jal_instr_Dhl || type_jalr_instr_Dhl); 
 
 // Assume that the imemreq and imemresp_val happen at the same cycle
 am_imemreq_imemval_same_cycle: assume property (!imemreq_val |-> !imemresp_val);
