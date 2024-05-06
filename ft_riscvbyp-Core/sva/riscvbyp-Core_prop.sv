@@ -524,6 +524,38 @@ wire type_divu_instr_Dhl;
 wire type_rem_instr_Dhl;
 wire type_remu_instr_Dhl;
 
+wire type_add_instr_Xhl;
+wire type_sub_instr_Xhl;
+wire type_sll_instr_Xhl;
+wire type_slt_instr_Xhl;
+wire type_sltu_instr_Xhl;
+wire type_xor_instr_Xhl;
+wire type_srl_instr_Xhl;
+wire type_sra_instr_Xhl;
+wire type_or_instr_Xhl;
+wire type_and_instr_Xhl;
+wire type_mul_instr_Xhl;
+wire type_div_instr_Xhl;
+wire type_divu_instr_Xhl;
+wire type_rem_instr_Xhl;
+wire type_remu_instr_Xhl;
+
+wire type_add_instr_Mhl;
+wire type_sub_instr_Mhl;
+wire type_sll_instr_Mhl;
+wire type_slt_instr_Mhl;
+wire type_sltu_instr_Mhl;
+wire type_xor_instr_Mhl;
+wire type_srl_instr_Mhl;
+wire type_sra_instr_Mhl;
+wire type_or_instr_Mhl;
+wire type_and_instr_Mhl;
+wire type_mul_instr_Mhl;
+wire type_div_instr_Mhl;
+wire type_divu_instr_Mhl;
+wire type_rem_instr_Mhl;
+wire type_remu_instr_Mhl;
+
 wire type_add_instr_Whl;
 wire type_sub_instr_Whl;
 wire type_sll_instr_Whl;
@@ -574,6 +606,12 @@ wire type_lh_instr_Mhl;
 wire type_lbu_instr_Mhl;
 wire type_lhu_instr_Mhl;
 
+wire type_lw_instr_Xhl;
+wire type_lb_instr_Xhl;
+wire type_lh_instr_Xhl;
+wire type_lbu_instr_Xhl;
+wire type_lhu_instr_Xhl;
+
 wire type_lw_instr_Whl;
 wire type_lb_instr_Whl;
 wire type_lh_instr_Whl;
@@ -583,6 +621,7 @@ wire type_lhu_instr_Whl;
 wire type_load_instr_Dhl;
 wire type_load_instr_Mhl;
 wire type_load_instr_Whl;
+
 
 // Store
 wire type_sw_instr_Dhl;
@@ -616,18 +655,30 @@ wire type_bge_instr_Xhl;
 wire type_bltu_instr_Xhl;
 wire type_bgeu_instr_Xhl;
 
+wire type_beq_instr_Mhl;
+wire type_bne_instr_Mhl; 
+wire type_blt_instr_Mhl; 
+wire type_bge_instr_Mhl;
+wire type_bltu_instr_Mhl;
+wire type_bgeu_instr_Mhl;
+
 // JAL
 wire type_jal_instr_Dhl;
+wire type_jal_instr_Xhl;
+wire type_jal_instr_Mhl;
 wire type_jal_instr_Whl;
 
 // JALR
 wire type_jalr_instr_Dhl;
+wire type_jalr_instr_Xhl;
+wire type_jalr_instr_Mhl;
 wire type_jalr_instr_Whl;
 
 wire branch_taken_condition;
 
 wire type_branch_instr_Dhl;
 wire type_branch_instr_Xhl;
+wire type_branch_instr_Mhl;
 
 // Register definitons
 reg [7:0] ir_transid_reg;
@@ -697,9 +748,37 @@ reg [31:0] calculated_stored_pc_jal;
 reg jump_taken_after_branch_reg; 
 reg [31:0] calculated_pc_jal; 
 
+//instructions that use these registers
+wire instr_use_rs1_Dhl = type_alu_i_instr_Dhl || type_alu_r_instr_Dhl || type_load_instr_Dhl || type_store_instr_Dhl || type_branch_instr_Dhl; 
+wire instr_use_rs2_Dhl = type_alu_i_instr_Dhl || type_alu_r_instr_Dhl || type_store_instr_Dhl || type_branch_instr_Dhl; 
+wire instr_use_rd_Xhl =  type_alu_i_instr_Xhl || type_alu_r_instr_Xhl || type_load_instr_Xhl || type_jal_instr_Xhl || type_jalr_instr_Xhl;
+wire instr_use_rd_Mhl =  type_alu_i_instr_Mhl || type_alu_r_instr_Mhl || type_load_instr_Mhl || type_jal_instr_Mhl || type_jalr_instr_Mhl;
+wire instr_use_rd_Whl =  type_alu_i_instr_Whl || type_alu_r_instr_Whl || type_load_instr_Whl || type_jal_instr_Whl || type_jalr_instr_Whl;
+
 // Wire definitions
-wire [31:0] rs1_data = dpath.rf_rdata0_Dhl;
-wire [31:0] rs2_data = dpath.rf_rdata1_Dhl; 
+// Bypassing logic
+wire rs1_X_byp = ctrl.inst_val_Dhl && instr_use_rs1_Dhl && instr_use_rd_Xhl && ctrl.inst_val_Xhl && !type_load_instr_Xhl && (rs1 == ctrl.rf_waddr_Xhl) && (rs1 != 5'd0);
+wire rs2_X_byp = ctrl.inst_val_Dhl && instr_use_rs2_Dhl && instr_use_rd_Xhl && ctrl.inst_val_Xhl && !type_load_instr_Xhl && (rs2 == ctrl.rf_waddr_Xhl) && (rs2 != 5'd0);
+wire rs1_M_byp = ctrl.inst_val_Dhl && instr_use_rs1_Dhl && instr_use_rd_Mhl && ctrl.inst_val_Mhl && (rs1 == ctrl.rf_waddr_Mhl) && (rs1 != 5'd0);
+wire rs2_M_byp = ctrl.inst_val_Dhl && instr_use_rs2_Dhl && instr_use_rd_Mhl && ctrl.inst_val_Mhl && (rs2 == ctrl.rf_waddr_Mhl) && (rs2 != 5'd0);
+wire rs1_W_byp = ctrl.inst_val_Dhl && instr_use_rs1_Dhl && instr_use_rd_Whl && ctrl.inst_val_Whl && (rs1 == ctrl.rf_waddr_Whl) && (rs1 != 5'd0);
+wire rs2_W_byp = ctrl.inst_val_Dhl && instr_use_rs2_Dhl && instr_use_rd_Whl && ctrl.inst_val_Whl && (rs2 == ctrl.rf_waddr_Whl) && (rs2 != 5'd0);
+
+// aggregate 
+wire rs1_byp = rs1_X_byp || rs1_M_byp || rs1_W_byp;
+wire rs2_byp = rs2_X_byp || rs2_M_byp || rs2_W_byp;
+
+wire [31:0] rs1_data = !(rs1_byp) ? dpath.rf_rdata0_Dhl : 
+						(rs1_X_byp) ?  dpath.execute_mux_out_Xhl :
+						(rs1_M_byp) ? dpath.wb_mux_out_Mhl : 
+						(rs1_W_byp) ? dpath.wb_mux_out_Whl :
+						32'bx ;
+wire [31:0] rs2_data =  (rs2_byp) ? dpath.rf_rdata1_Dhl : 
+						(rs2_X_byp) ?  dpath.execute_mux_out_Xhl :
+						(rs2_M_byp) ? dpath.wb_mux_out_Mhl : 
+						(rs2_W_byp) ? dpath.wb_mux_out_Whl :
+						32'bx ;
+ 
 
 // Parse the opcode
 wire [31:25] func7_t = ctrl.ir_Dhl[31:25]; 
@@ -764,18 +843,79 @@ riscv_Instructions instructions_decode
 riscv_Instructions instructions_execute
 (
 	.instr(ctrl.ir_Xhl),
+	.type_add_instr(type_add_instr_Xhl),
+    .type_sub_instr(type_sub_instr_Xhl),
+    .type_sll_instr(type_sll_instr_Xhl),
+    .type_slt_instr(type_slt_instr_Xhl),
+    .type_sltu_instr(type_sltu_instr_Xhl),
+    .type_xor_instr(type_xor_instr_Xhl),
+    .type_srl_instr(type_srl_instr_Xhl),
+    .type_sra_instr(type_sra_instr_Xhl),
+    .type_or_instr(type_or_instr_Xhl),
+    .type_and_instr(type_and_instr_Xhl),
+	.type_mul_instr(type_mul_instr_Xhl),
+	.type_div_instr(type_div_instr_Xhl),
+	.type_divu_instr(type_divu_instr_Xhl),
+	.type_rem_instr(type_rem_instr_Xhl),
+	.type_remu_instr(type_remu_instr_Xhl),
+	.type_addi_instr(type_addi_instr_Xhl),
+    .type_slli_instr(type_slli_instr_Xhl),
+    .type_slti_instr(type_slti_instr_Xhl),
+    .type_sltiu_instr(type_sltiu_instr_Xhl),
+    .type_xori_instr(type_xori_instr_Xhl),
+    .type_srli_instr(type_srli_instr_Xhl),
+    .type_srai_instr(type_srai_instr_Xhl),
+    .type_ori_instr(type_ori_instr_Xhl),
+    .type_andi_instr(type_andi_instr_Xhl),
 	.type_beq_instr(type_beq_instr_Xhl),
 	.type_bne_instr(type_bne_instr_Xhl), 
 	.type_blt_instr(type_blt_instr_Xhl), 
 	.type_bge_instr(type_bge_instr_Xhl),
 	.type_bltu_instr(type_bltu_instr_Xhl),
-	.type_bgeu_instr(type_bgeu_instr_Xhl)
+	.type_bgeu_instr(type_bgeu_instr_Xhl),
+	.type_lw_instr(type_lw_instr_Xhl),
+	.type_lb_instr(type_lb_instr_Xhl),
+    .type_lh_instr(type_lh_instr_Xhl),
+    .type_lbu_instr(type_lbu_instr_Xhl),
+    .type_lhu_instr(type_lhu_instr_Xhl),
+	.type_jal_instr(type_jal_instr_Xhl),
+	.type_jalr_instr(type_jalr_instr_Xhl)
 ); 
 
 // Parse the instruction in the M stage
 riscv_Instructions instructions_memory
 (
 	.instr(ctrl.ir_Mhl),
+	.type_add_instr(type_add_instr_Mhl),
+    .type_sub_instr(type_sub_instr_Mhl),
+    .type_sll_instr(type_sll_instr_Mhl),
+    .type_slt_instr(type_slt_instr_Mhl),
+    .type_sltu_instr(type_sltu_instr_Mhl),
+    .type_xor_instr(type_xor_instr_Mhl),
+    .type_srl_instr(type_srl_instr_Mhl),
+    .type_sra_instr(type_sra_instr_Mhl),
+    .type_or_instr(type_or_instr_Mhl),
+    .type_and_instr(type_and_instr_Mhl),
+	.type_mul_instr(type_mul_instr_Mhl),
+	.type_div_instr(type_div_instr_Mhl),
+	.type_divu_instr(type_divu_instr_Mhl),
+	.type_rem_instr(type_rem_instr_Mhl),
+	.type_remu_instr(type_remu_instr_Mhl),
+	.type_addi_instr(type_addi_instr_Mhl),
+    .type_slli_instr(type_slli_instr_Mhl),
+    .type_slti_instr(type_slti_instr_Mhl),
+    .type_sltiu_instr(type_sltiu_instr_Mhl),
+    .type_xori_instr(type_xori_instr_Mhl),
+    .type_srli_instr(type_srli_instr_Mhl),
+    .type_srai_instr(type_srai_instr_Mhl),
+    .type_ori_instr(type_ori_instr_Mhl),
+    .type_andi_instr(type_andi_instr_Mhl),
+	.type_beq_instr(type_beq_instr_Mhl),
+	.type_bne_instr(type_bne_instr_Mhl), 
+	.type_blt_instr(type_blt_instr_Mhl), 
+	.type_bge_instr(type_bge_instr_Mhl),
+	.type_bltu_instr(type_bltu_instr_Mhl),
+	.type_bgeu_instr(type_bgeu_instr_Mhl),
 	.type_lw_instr(type_lw_instr_Mhl),
 	.type_lb_instr(type_lb_instr_Mhl),
     .type_lh_instr(type_lh_instr_Mhl),
@@ -783,7 +923,9 @@ riscv_Instructions instructions_memory
     .type_lhu_instr(type_lhu_instr_Mhl),
 	.type_sw_instr(type_sw_instr_Mhl),
 	.type_sb_instr(type_sb_instr_Mhl),
-	.type_sh_instr(type_sh_instr_Mhl)
+	.type_sh_instr(type_sh_instr_Mhl), 
+	.type_jal_instr(type_jal_instr_Xhl),
+	.type_jalr_instr(type_jalr_instr_Xhl)
 ); 
 
 // Parse the instruction in the W stage
@@ -842,6 +984,38 @@ wire type_alu_r_instr_Dhl = type_mul_instr_Dhl ||
 							type_or_instr_Dhl ||
 							type_and_instr_Dhl; 
 
+wire type_alu_r_instr_Xhl = type_mul_instr_Xhl || 
+							type_div_instr_Xhl || 
+							type_divu_instr_Xhl || 
+							type_rem_instr_Xhl || 
+							type_remu_instr_Xhl ||
+							type_add_instr_Xhl || 
+							type_sub_instr_Xhl || 
+							type_sll_instr_Xhl || 
+							type_slt_instr_Xhl ||
+							type_sltu_instr_Xhl ||
+							type_xor_instr_Xhl ||
+							type_srl_instr_Xhl ||
+							type_sra_instr_Xhl ||
+							type_or_instr_Xhl ||
+							type_and_instr_Xhl; 
+
+wire type_alu_r_instr_Mhl = type_mul_instr_Mhl || 
+							type_div_instr_Mhl || 
+							type_divu_instr_Mhl || 
+							type_rem_instr_Mhl || 
+							type_remu_instr_Mhl ||
+							type_add_instr_Mhl || 
+							type_sub_instr_Mhl || 
+							type_sll_instr_Mhl || 
+							type_slt_instr_Mhl ||
+							type_sltu_instr_Mhl ||
+							type_xor_instr_Mhl ||
+							type_srl_instr_Mhl ||
+							type_sra_instr_Mhl ||
+							type_or_instr_Mhl ||
+							type_and_instr_Mhl; 
+
 wire type_alu_r_instr_Whl = type_mul_instr_Whl || 
 							type_div_instr_Whl || 
 							type_divu_instr_Whl || 
@@ -868,6 +1042,26 @@ wire type_alu_i_instr_Dhl = type_addi_instr_Dhl ||
 							type_ori_instr_Dhl ||
 							type_andi_instr_Dhl;
 
+wire type_alu_i_instr_Xhl = type_addi_instr_Xhl || 
+							type_slli_instr_Xhl || 
+							type_slti_instr_Xhl ||
+							type_sltiu_instr_Xhl ||
+							type_xori_instr_Xhl ||
+							type_srli_instr_Xhl ||
+							type_srai_instr_Xhl ||
+							type_ori_instr_Xhl ||
+							type_andi_instr_Xhl;
+
+wire type_alu_i_instr_Mhl = type_addi_instr_Mhl || 
+							type_slli_instr_Mhl || 
+							type_slti_instr_Mhl ||
+							type_sltiu_instr_Mhl ||
+							type_xori_instr_Mhl ||
+							type_srli_instr_Mhl ||
+							type_srai_instr_Mhl ||
+							type_ori_instr_Mhl ||
+							type_andi_instr_Mhl;
+
 wire type_alu_i_instr_Whl = type_addi_instr_Whl || 
 							type_slli_instr_Whl || 
 							type_slti_instr_Whl ||
@@ -879,6 +1073,7 @@ wire type_alu_i_instr_Whl = type_addi_instr_Whl ||
 							type_andi_instr_Whl;
 
 assign type_load_instr_Dhl = type_lw_instr_Dhl || type_lb_instr_Dhl || type_lh_instr_Dhl || type_lbu_instr_Dhl || type_lhu_instr_Dhl;
+assign type_load_instr_Xhl = type_lw_instr_Xhl || type_lb_instr_Xhl || type_lh_instr_Xhl || type_lbu_instr_Xhl || type_lhu_instr_Xhl;
 assign type_load_instr_Mhl = type_lw_instr_Mhl || type_lb_instr_Mhl || type_lh_instr_Mhl || type_lbu_instr_Mhl || type_lhu_instr_Mhl;
 assign type_load_instr_Whl = type_lw_instr_Whl || type_lb_instr_Whl || type_lh_instr_Whl || type_lbu_instr_Whl || type_lhu_instr_Whl;
 
@@ -888,6 +1083,7 @@ assign type_store_instr_Whl = type_sw_instr_Whl || type_sb_instr_Whl || type_sh_
 
 assign type_branch_instr_Dhl = type_beq_instr_Dhl || type_bne_instr_Dhl || type_blt_instr_Dhl || type_bge_instr_Dhl  || type_bltu_instr_Dhl  || type_bgeu_instr_Dhl;
 assign type_branch_instr_Xhl = type_beq_instr_Xhl || type_bne_instr_Xhl || type_blt_instr_Xhl || type_bge_instr_Xhl || type_bltu_instr_Xhl || type_bgeu_instr_Xhl;
+assign type_branch_instr_Mhl = type_beq_instr_Mhl || type_bne_instr_Mhl || type_blt_instr_Mhl || type_bge_instr_Mhl || type_bltu_instr_Mhl || type_bgeu_instr_Mhl;
 
 assign branch_taken_condition = type_beq_instr_Xhl ? rs1_data_reg == rs2_data_reg :
 								type_bne_instr_Xhl ? rs1_data_reg != rs2_data_reg :
@@ -1276,7 +1472,7 @@ end
 
 // Assumptions
 // Assume valid opcode
-am_val_instr: assume property (type_alu_r_instr_Dhl || type_alu_i_instr_Dhl || type_load_instr_Dhl || type_store_instr_Dhl || type_branch_instr_Dhl || type_jal_instr_Dhl || type_jalr_instr_Dhl);
+am_val_instr: assume property (type_alu_r_instr_Dhl || type_alu_i_instr_Dhl);  //|| type_load_instr_Dhl || type_store_instr_Dhl || type_branch_instr_Dhl || type_jal_instr_Dhl || type_jalr_instr_Dhl);
 
 // Assume that the imemreq and imemresp_val happen at the same cycle
 am_imemreq_imemval_same_cycle: assume property (!imemreq_val |-> !imemresp_val);

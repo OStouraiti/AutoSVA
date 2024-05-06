@@ -106,6 +106,9 @@ module riscv_CoreCtrl
 
   reg bubble_Fhl;
 
+  // CHANGED FOR FORMAL
+  wire imemreq_rdy_Fhl = imemreq_rdy || ( !reset && imemreq_val_Fhl && inst_val_Fhl && !imemresp_val );
+  
   always @ ( posedge clk ) begin
     // Only pipeline the bubble bit if the next stage is not stalled
     if ( reset ) begin
@@ -128,13 +131,17 @@ module riscv_CoreCtrl
   // Squash instruction in F stage if branch taken for a valid
   // instruction or if there was an exception in X stage
 
+  // Stall in F if the imem is not rdy
+  // CHANGED FOR FORMAL
+  wire stall_imem_Fhl = !imemreq_rdy;
+
   wire squash_Fhl
     = ( inst_val_Dhl && brj_taken_Dhl )
    || ( inst_val_Xhl && brj_taken_Xhl );
 
   // Stall in F if D is stalled
-
-  assign stall_Fhl = stall_Dhl;
+  // CHANGED FOR FORMAL
+  assign stall_Fhl = stall_Dhl || stall_imem_Fhl;
 
   // Next bubble bit
 
@@ -177,6 +184,8 @@ module riscv_CoreCtrl
   reg [31:0] ir_Dhl;
   reg        bubble_Dhl;
 
+  //CHANGED FOR FORMAL
+  reg imemreq_rdy_Dhl;
   always @ ( posedge clk ) begin
     if ( reset ) begin
       bubble_Dhl <= 1'b1;
@@ -185,6 +194,7 @@ module riscv_CoreCtrl
       ir_Dhl     <= imemresp_queue_mux_out_Fhl;
       bubble_Dhl <= bubble_next_Fhl;
     end
+    imemreq_rdy_Dhl <= imemreq_rdy_Fhl; 
   end
 
   //----------------------------------------------------------------------
@@ -309,7 +319,9 @@ module riscv_CoreCtrl
 
   // Is the current stage valid?
 
-  wire inst_val_Dhl = ( !bubble_Dhl && !squash_Dhl );
+  // CHANGED FOR FORMAL
+  wire inst_invalid_imem_Dhl = imemreq_rdy_Dhl ? 1'b0 : !stall_Dhl_reg;
+  wire inst_val_Dhl = ( !bubble_Dhl && !squash_Dhl  && !inst_invalid_imem_Dhl);
 
   // Ship instruction for field parsing to datapath
 
@@ -588,6 +600,7 @@ module riscv_CoreCtrl
   reg [11:0] csr_addr_Xhl;
 
   reg        bubble_Xhl;
+  reg        stall_Dhl_reg; // CHANGED FOR FORMAL
   reg        inst_is_load_Xhl;
 
   // Pipeline Controls
@@ -595,6 +608,7 @@ module riscv_CoreCtrl
   always @ ( posedge clk ) begin
     if ( reset ) begin
       bubble_Xhl <= 1'b1;
+      stall_Dhl_reg <= 1'b0;
     end
     else if( !stall_Xhl ) begin
       ir_Xhl               <= ir_Dhl;
@@ -617,6 +631,8 @@ module riscv_CoreCtrl
       bubble_Xhl           <= bubble_next_Dhl;
       inst_is_load_Xhl     <= inst_is_load_Dhl;
     end
+
+    stall_Dhl_reg        <= stall_Dhl;
 
   end
 
@@ -664,7 +680,8 @@ module riscv_CoreCtrl
 
   // Stall in X if imem is not ready
 
-  wire stall_imem_Xhl = !imemreq_rdy;
+  // CHANGED FOR FORMAL
+  // wire stall_imem_Xhl = !imemreq_rdy;
 
   // Stall in X if dmem is not ready and there was a valid request
 
@@ -672,7 +689,8 @@ module riscv_CoreCtrl
 
   // Aggregate Stall Signal
 
-  assign stall_Xhl = ( stall_Mhl || stall_muldiv_Xhl || stall_imem_Xhl || stall_dmem_Xhl );
+  // // CHANGED FOR FORMAL
+  assign stall_Xhl = ( stall_Mhl || stall_muldiv_Xhl || stall_dmem_Xhl ); // || stall_imem_Xhl );
 
   // Next bubble bit
 
@@ -736,12 +754,14 @@ module riscv_CoreCtrl
 
   // Stall in M if memory response is not returned for a valid request
 
-  wire stall_dmem_Mhl = ( !reset && dmemreq_val_Mhl && inst_val_Mhl && !dmemresp_val );
-  wire stall_imem_Mhl = ( !reset && imemreq_val_Fhl && inst_val_Fhl && !imemresp_val );
+  // CHANGED FOR FORMAL
+   wire stall_dmem_Mhl = ( !reset && dmemreq_val_Mhl && inst_val_Mhl && !dmemresp_val );
+  // wire stall_imem_Mhl = ( !reset && imemreq_val_Fhl && inst_val_Fhl && !imemresp_val );
 
   // Aggregate Stall Signal
 
-  wire stall_Mhl = ( stall_imem_Mhl || stall_dmem_Mhl );
+  // CHANGED FOR FORMAL
+  wire stall_Mhl = ( stall_dmem_Mhl ); // stall_imem_Mhl ||
 
   // Next bubble bit
 
