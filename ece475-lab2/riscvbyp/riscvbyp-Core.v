@@ -5,13 +5,19 @@
 `ifndef RISCV_CORE_V
 `define RISCV_CORE_V
 
-`include "vc-MemReqMsg.v"
-`include "vc-MemRespMsg.v"
-`include "riscvbyp-CoreCtrl.v"
-`include "riscvbyp-CoreDpath.v"
+
+`include "../../ece475-lab2/vc/vc-MemReqMsg.v"
+`include "../../ece475-lab2/vc/vc-MemRespMsg.v"
+`include "../../ece475-lab2/riscvbyp/riscvbyp-CoreCtrl.v"
+`include "../../ece475-lab2/riscvbyp/riscvbyp-CoreDpath.v"
+`include "../../ece475-lab2/riscvbyp/riscvbyp-InstMsg.v"
+`include "../../ece475-lab2/riscvbyp/riscvbyp-Instructions.v"
+
 
 module riscv_Core
 (
+   /*AUTOSVA  */
+  
   input         clk,
   input         reset,
 
