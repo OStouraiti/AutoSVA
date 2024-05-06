@@ -826,7 +826,12 @@ riscv_Instructions instructions_writeback
 	.type_jalr_instr(type_jalr_instr_Whl)
 );
 
-wire type_alu_r_instr_Dhl = type_add_instr_Dhl || 
+wire type_alu_r_instr_Dhl = type_mul_instr_Dhl || 
+							type_div_instr_Dhl || 
+							type_divu_instr_Dhl || 
+							type_rem_instr_Dhl || 
+							type_remu_instr_Dhl ||
+							type_add_instr_Dhl || 
 							type_sub_instr_Dhl || 
 							type_sll_instr_Dhl || 
 							type_slt_instr_Dhl ||
@@ -835,14 +840,14 @@ wire type_alu_r_instr_Dhl = type_add_instr_Dhl ||
 							type_srl_instr_Dhl ||
 							type_sra_instr_Dhl ||
 							type_or_instr_Dhl ||
-							type_and_instr_Dhl || 
-							type_mul_instr_Dhl || 
-							type_div_instr_Dhl || 
-							type_divu_instr_Dhl || 
-							type_rem_instr_Dhl || 
-							type_remu_instr_Dhl ; 
+							type_and_instr_Dhl; 
 
-wire type_alu_r_instr_Whl = type_add_instr_Whl || 
+wire type_alu_r_instr_Whl = type_mul_instr_Whl || 
+							type_div_instr_Whl || 
+							type_divu_instr_Whl || 
+							type_rem_instr_Whl || 
+							type_remu_instr_Whl ||
+							type_add_instr_Whl || 
 							type_sub_instr_Whl || 
 							type_sll_instr_Whl || 
 							type_slt_instr_Whl ||
@@ -851,12 +856,7 @@ wire type_alu_r_instr_Whl = type_add_instr_Whl ||
 							type_srl_instr_Whl ||
 							type_sra_instr_Whl ||
 							type_or_instr_Whl ||
-							type_and_instr_Whl || 
-							type_mul_instr_Whl || 
-							type_div_instr_Whl || 
-							type_divu_instr_Whl || 
-							type_rem_instr_Whl || 
-							type_remu_instr_Whl ;
+							type_and_instr_Whl;
 
 wire type_alu_i_instr_Dhl = type_addi_instr_Dhl || 
 							type_slli_instr_Dhl || 
@@ -900,8 +900,9 @@ assign branch_taken_condition = type_beq_instr_Xhl ? rs1_data_reg == rs2_data_re
 // Calculate expected ALU output
 always_comb begin
 	alu_output = 32'bx;
-	unsigned_a = (rs1_data[31] ?  ~rs1_data + 1'b1 : rs1_data); 
-	unsigned_b = (rs2_data[31] ?  ~rs2_data + 1'b1 : rs2_data);
+	unsigned_a = (rs1_data[31] ?  ~rs1_data + 32'b1 : rs1_data); 
+	unsigned_b = (rs2_data[31] ?  ~rs2_data + 32'b1 : rs2_data);
+	unsigned_res = 32'bx; 
 	load_mem_addr = 32'bx; 
 	store_mem_addr = 32'bx;
 	calculated_pc = 32'bx;
@@ -958,7 +959,7 @@ always_comb begin
 	end 
 
 	if (type_remu_instr_Dhl) begin
-		unsigned_res = unsigned_a % unsigned_b;
+		unsigned_res = rs1_data % rs2_data; 
 		alu_output = unsigned_res; 
 	end 
 

@@ -5,7 +5,7 @@
 `ifndef RISCV_INT_MUL_ITERATIVE_V
 `define RISCV_INT_MUL_ITERATIVE_V
 
-module imuldiv_IntMulIterative #(parameter WIDTH = 4)
+module imuldiv_IntMulIterative #(parameter WIDTH = 32)
 (
   /*AUTOSVA
     mulreq_trans: mulreq -IN> mulresp
@@ -86,7 +86,7 @@ endmodule
 // Datapath
 //------------------------------------------------------------------------
 
-module imuldiv_IntMulIterativeDpath #(parameter WIDTH = 4)
+module imuldiv_IntMulIterativeDpath #(parameter WIDTH = 32)
 (
   input                clk,
   input                reset,
@@ -243,7 +243,7 @@ endmodule
 // Control Logic
 //------------------------------------------------------------------------
 
-module imuldiv_IntMulIterativeCtrl #(parameter WIDTH = 4)
+module imuldiv_IntMulIterativeCtrl #(parameter WIDTH = 32)
 (
   input        clk,
   input        reset,

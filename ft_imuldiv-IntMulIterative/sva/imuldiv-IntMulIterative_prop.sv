@@ -5,7 +5,7 @@
 
 module imuldiv_IntMulIterative_prop
 #(
-		parameter ASSERT_INPUTS = 0, parameter WIDTH = 4)
+		parameter ASSERT_INPUTS = 0, parameter WIDTH = 32)
 (
 		input                clk,
 		input                reset,
