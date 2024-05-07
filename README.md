@@ -1,3 +1,17 @@
+ECE 575 extensions:
+
+Implemented formal verification test benches for iterative imuldiv (HOP1), RISC-V stall and RISC-V bypass (HOP2), and the scoreboard in RISC-V OoO (HOP4). The example DUT used can be found in the following directories. 
+    - HOP1: imuldiv
+    - HOP2: ece475-lab2
+    - HOP4: HOP4
+
+To run the test benches, copy into directory any one of the ECE 475/575 HOP assignments that want to be formally verified.
+Add to the top level module the annotations that are found in the corresponding directories.
+Can use either the run_lab#_formal.sh script provided or manually compile using the instructions found the the docs directory
+Copy the properties from the corresponding $PROJECT_DIRECTORY/sva/PROJECT_NAME_prop.sv
+run Jasper Gold using the run jg command specified in the docs directory. 
+
+
 ![AutoSVA Logo](/docs/autosva_logo.png?raw=true)
 
 # NEW WORK!
