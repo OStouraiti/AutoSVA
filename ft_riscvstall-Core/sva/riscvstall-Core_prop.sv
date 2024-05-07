@@ -826,11 +826,11 @@ riscv_Instructions instructions_writeback
 	.type_jalr_instr(type_jalr_instr_Whl)
 );
 
-wire type_alu_r_instr_Dhl = type_mul_instr_Dhl || 
+wire type_alu_r_instr_Dhl = type_mul_instr_Dhl ||
 							type_div_instr_Dhl || 
 							type_divu_instr_Dhl || 
 							type_rem_instr_Dhl || 
-							type_remu_instr_Dhl ||
+							type_remu_instr_Dhl||
 							type_add_instr_Dhl || 
 							type_sub_instr_Dhl || 
 							type_sll_instr_Dhl || 
@@ -840,7 +840,7 @@ wire type_alu_r_instr_Dhl = type_mul_instr_Dhl ||
 							type_srl_instr_Dhl ||
 							type_sra_instr_Dhl ||
 							type_or_instr_Dhl ||
-							type_and_instr_Dhl; 
+							type_and_instr_Dhl;
 
 wire type_alu_r_instr_Whl = type_mul_instr_Whl || 
 							type_div_instr_Whl || 
@@ -949,13 +949,13 @@ always_comb begin
 	end 
 
 	if (type_divu_instr_Dhl) begin
-		unsigned_res = unsigned_a / unsigned_b;
+		unsigned_res = rs1_data / rs2_data;
 		alu_output = unsigned_res; 
 	end 
 
 	if (type_rem_instr_Dhl) begin
 		unsigned_res = unsigned_a % unsigned_b;
-		alu_output = (rs1_data[31] ^ rs2_data[31]) ? ~unsigned_res + 32'b1 : unsigned_res; 
+		alu_output = (rs1_data[31]) ? ~unsigned_res + 32'b1 : unsigned_res; 
 	end 
 
 	if (type_remu_instr_Dhl) begin
@@ -1276,7 +1276,7 @@ end
 
 // Assumptions
 // Assume valid opcode
-am_val_instr: assume property (type_alu_r_instr_Dhl || type_alu_i_instr_Dhl || type_load_instr_Dhl || type_store_instr_Dhl || type_branch_instr_Dhl || type_jal_instr_Dhl || type_jalr_instr_Dhl);
+am_val_instr: assume property (type_alu_r_instr_Dhl || type_load_instr_Dhl || type_store_instr_Dhl || type_branch_instr_Dhl || type_jal_instr_Dhl || type_jalr_instr_Dhl);
 
 // Assume that the imemreq and imemresp_val happen at the same cycle
 am_imemreq_imemval_same_cycle: assume property (!imemreq_val |-> !imemresp_val);
