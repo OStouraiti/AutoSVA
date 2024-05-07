@@ -8,18 +8,26 @@
 `include "imuldiv-DivReqMsg.v"
 
 module imuldiv_IntDivIterative
+#(parameter WIDTH = 32)
 (
+  /*AUTOSVA
+  divreq_trans: divreq -IN> divresp
+  [2*WIDTH-1:0] divreq_data = result
+  divreq_transid = 1'b0
+  [2*WIDTH-1:0] divresp_data = divresp_msg_result
+  divresp_transid = 1'b0
+*/
 
   input         clk,
   input         reset,
 
   input         divreq_msg_fn,
-  input  [31:0] divreq_msg_a,
-  input  [31:0] divreq_msg_b,
+  input  [WIDTH-1:0] divreq_msg_a,
+  input  [WIDTH-1:0] divreq_msg_b,
   input         divreq_val,
   output        divreq_rdy,
 
-  output [63:0] divresp_msg_result,
+  output [2*WIDTH-1:0] divresp_msg_result,
   output        divresp_val,
   input         divresp_rdy
 );
@@ -91,15 +99,16 @@ endmodule
 //------------------------------------------------------------------------
 
 module imuldiv_IntDivIterativeDpath
+#(parameter WIDTH = 32)
 (
   input         clk,
   input         reset,
 
   // Operands and Result
 
-  input  [31:0] divreq_msg_a,
-  input  [31:0] divreq_msg_b,
-  output [63:0] divresp_msg_result,
+  input  [WIDTH-1:0] divreq_msg_a,
+  input  [WIDTH-1:0] divreq_msg_b,
+  output [2*WIDTH-1:0] divresp_msg_result,
 
   // Datapath Outputs
 
@@ -144,7 +153,7 @@ module imuldiv_IntDivIterativeDpath
   // Counter Mux
 
   wire [4:0] counter_mux_out
-    = ( cntr_mux_sel == op_load ) ? 31
+    = ( cntr_mux_sel == op_load ) ? WIDTH-1
     : ( cntr_mux_sel == op_next ) ? counter_reg - 1'b1
     :                               5'bx;
 
@@ -152,9 +161,9 @@ module imuldiv_IntDivIterativeDpath
 
   // Sign of Result
 
-  wire   div_sign_next = divreq_msg_a[31] ^ divreq_msg_b[31];
+  wire   div_sign_next = divreq_msg_a[WIDTH-1] ^ divreq_msg_b[WIDTH-1];
 
-  wire   rem_sign_next = divreq_msg_a[31];
+  wire   rem_sign_next = divreq_msg_a[WIDTH-1];
 
   assign div_sign      = div_sign_reg;
 
@@ -162,22 +171,22 @@ module imuldiv_IntDivIterativeDpath
 
   // Unsigned Operands
 
-  wire [31:0] unsigned_a
-    = ( divreq_msg_a[31] && is_op_signed ) ? ~divreq_msg_a + 1'b1
+  wire [WIDTH-1:0] unsigned_a
+    = ( divreq_msg_a[WIDTH-1] && is_op_signed ) ? ~divreq_msg_a + 1'b1
     :                                           divreq_msg_a;
 
-  wire [31:0] unsigned_b
-    = ( divreq_msg_b[31] && is_op_signed ) ? ~divreq_msg_b + 1'b1
+  wire [WIDTH-1:0] unsigned_b
+    = ( divreq_msg_b[WIDTH-1] && is_op_signed ) ? ~divreq_msg_b + 1'b1
     :                                           divreq_msg_b;
 
   // Operand Muxes
 
-  wire [64:0] a_mux_out
-    = ( a_mux_sel == op_load ) ? { 65'b0, unsigned_a }
+  wire [2*WIDTH:0] a_mux_out
+    = ( a_mux_sel == op_load ) ? { {2*WIDTH+1{1'b0}}, unsigned_a }
     : ( a_mux_sel == op_next ) ? sub_mux_out
-    :                            65'bx;
+    :                            {2*WIDTH+1{1'b0}};
 
-  wire [64:0] b_in = { 1'b0, unsigned_b, 32'b0 };
+  wire [2*WIDTH:0] b_in = { 1'b0, unsigned_b, {WIDTH{1'b0}} };
 
   //----------------------------------------------------------------------
   // Sequential Logic
@@ -186,8 +195,8 @@ module imuldiv_IntDivIterativeDpath
   reg  [4:0] counter_reg;
   reg        div_sign_reg;
   reg        rem_sign_reg;
-  reg [64:0] a_reg;
-  reg [64:0] b_reg;
+  reg [2*WIDTH:0] a_reg;
+  reg [2*WIDTH:0] b_reg;
 
   always @ ( posedge clk ) begin
     if ( sign_en ) begin
@@ -212,32 +221,32 @@ module imuldiv_IntDivIterativeDpath
 
   // Operand Shifter
 
-  wire [64:0] a_shift_out = a_reg << 1;
+  wire [2*WIDTH:0] a_shift_out = a_reg << 1;
 
   // Subtractor
 
-  wire [64:0] sub_out = a_shift_out - b_reg;
+  wire [2*WIDTH:0] sub_out = a_shift_out - b_reg;
 
-  wire [64:0] sub_mux_out
-    = ( sub_mux_sel == sub_next )  ? { sub_out[64:1], 1'b1 }
+  wire [2*WIDTH:0] sub_mux_out
+    = ( sub_mux_sel == sub_next )  ? { sub_out[2*WIDTH:1], 1'b1 }
     : ( sub_mux_sel == sub_old )   ? a_shift_out
-    :                                65'bx;
+    :                                {2*WIDTH+1{1'b0}};
 
   // Sign of Difference (was result negative?)
 
-  assign diff_msb = sub_out[64];
+  assign diff_msb = sub_out[2*WIDTH];
 
   // Signed Result Muxes
 
-  wire [31:0] signed_res_div_mux_out
-    = ( res_div_sign_mux_sel == sign_u ) ? a_reg[31:0]
-    : ( res_div_sign_mux_sel == sign_s ) ? ~a_reg[31:0] + 1'b1
-    :                                     32'bx;
+  wire [WIDTH-1:0] signed_res_div_mux_out
+    = ( res_div_sign_mux_sel == sign_u ) ? a_reg[WIDTH-1:0]
+    : ( res_div_sign_mux_sel == sign_s ) ? ~a_reg[WIDTH-1:0] + 1'b1
+    :                                     {WIDTH{1'bx}};
 
-  wire [31:0] signed_res_rem_mux_out
-    = ( res_rem_sign_mux_sel == sign_u ) ? a_reg[63:32]
-    : ( res_rem_sign_mux_sel == sign_s ) ? ~a_reg[63:32] + 1'b1
-    :                                      32'bx;
+  wire [WIDTH-1:0] signed_res_rem_mux_out
+    = ( res_rem_sign_mux_sel == sign_u ) ? a_reg[2*WIDTH-1:WIDTH]
+    : ( res_rem_sign_mux_sel == sign_s ) ? ~a_reg[2*WIDTH-1:WIDTH] + 1'b1
+    :                                      {WIDTH{1'bx}};
 
   // Final Result
 
@@ -250,6 +259,7 @@ endmodule
 //------------------------------------------------------------------------
 
 module imuldiv_IntDivIterativeCtrl
+#(parameter WIDTH = 32)
 (
   input        clk,
   input        reset,
