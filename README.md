@@ -7,6 +7,7 @@ Implemented formal verification test benches for iterative imuldiv (HOP1), RISC-
     - HOP4: ece475-lab4
 
 To run our JasperGold on our DUTs and with our defined property files, you can run the following commands:
+
     -HOP1: 
         multiplier: source run_jg.sh imuldiv-IntMulIterative
         divider/rem: source run_jg.sh imuldiv-IntDivIterative
@@ -14,12 +15,13 @@ To run our JasperGold on our DUTs and with our defined property files, you can r
     -HOP2: 
         riscv-stall: source run_jg.sh riscvstall-Core
         riscv-byp: source run_jg.sh riscvbyp-Core
-
     -HOP4:
         riscv-OoO: source run_jg.sh riscvooo-CoreReorderBuffer
 
 ****Note that the property files should not be regenerated, since changes have been made manually to allow for certain properties to be checked
+
 ****Changes made to the DUT can be found in the following files with the comment "// CHANGED FOR FORMAL":
+
         ece475-lab2/riscvstall/riscvstall-CoreCtrl.v
         ece475-lab2/riscvbyp/riscvbyp-CoreCtrl.v
 
