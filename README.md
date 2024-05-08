@@ -1,15 +1,27 @@
 ECE 575 extensions:
 
-Implemented formal verification test benches for iterative imuldiv (HOP1), RISC-V stall and RISC-V bypass (HOP2), and the scoreboard in RISC-V OoO (HOP4). The example DUT used can be found in the following directories. 
-    - HOP1: imuldiv
-    - HOP2: ece475-lab2
-    - HOP4: HOP4
+Implemented formal verification test benches for iterative imuldiv (HOP1), RISC-V stall and RISC-V bypass (HOP2), and the ReOrder Buffer in RISC-V OoO (HOP4). The DUTs used can be found in the following directories. 
 
-To run the test benches, copy into directory any one of the ECE 475/575 HOP assignments that want to be formally verified.
-Add to the top level module the annotations that are found in the corresponding directories.
-Can use either the run_lab#_formal.sh script provided or manually compile using the instructions found the the docs directory
-Copy the properties from the corresponding $PROJECT_DIRECTORY/sva/PROJECT_NAME_prop.sv
-run Jasper Gold using the run jg command specified in the docs directory. 
+    - HOP1: ece475-lab1
+    - HOP2: ece475-lab2
+    - HOP4: ece475-lab4
+
+To run our JasperGold on our DUTs and with our defined property files, you can run the following commands:
+    -HOP1: 
+        multiplier: source run_jg.sh imuldiv-IntMulIterative
+        divider/rem: source run_jg.sh imuldiv-IntDivIterative
+        top: source run_jg.sh imuldiv-IntMulDivIterative
+    -HOP2: 
+        riscv-stall: source run_jg.sh riscvstall-Core
+        riscv-byp: source run_jg.sh riscvbyp-Core
+
+    -HOP4:
+        riscv-OoO: source run_jg.sh riscvooo-CoreReorderBuffer
+
+****Note that the property files should not be regenerated, since changes have been made manually to allow for certain properties to be checked
+****Changes made to the DUT can be found in the following files with the comment "// CHANGED FOR FORMAL":
+        ece475-lab2/riscvstall/riscvstall-CoreCtrl.v
+        ece475-lab2/riscvbyp/riscvbyp-CoreCtrl.v
 
 
 ![AutoSVA Logo](/docs/autosva_logo.png?raw=true)

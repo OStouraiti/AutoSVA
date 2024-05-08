@@ -133,11 +133,11 @@ module riscv_CoreCtrl
    || ( inst_val_Xhl && brj_taken_Xhl );
 
   // Stall in F if the imem is not rdy
-  // CHANGE FOR FORMAL
+  // CHANGED FOR FORMAL
   wire stall_imem_Fhl = !imemreq_rdy;
 
   // Stall in F if D is stalled
-  // CHANGE FOR FORMAL
+  // CHANGED FOR FORMAL
   assign stall_Fhl = stall_Dhl || stall_imem_Fhl;
 
   // Next bubble bit
@@ -637,7 +637,7 @@ module riscv_CoreCtrl
   wire stall_muldiv_Xhl = ( muldivreq_val_Xhl && inst_val_Xhl && !muldivresp_val );
 
   // Stall in X if imem is not ready
-  // CHANGE FOR FORMAL
+  // CHANGED FOR FORMAL
   //wire stall_imem_Xhl = !imemreq_rdy;
 
   // Stall in X if dmem is not ready and there was a valid request
@@ -646,7 +646,7 @@ module riscv_CoreCtrl
 
   // Aggregate Stall Signal
 
-  // CHANGE FOR FORMAL
+  // CHANGED FOR FORMAL
   assign stall_Xhl = ( stall_Mhl || stall_muldiv_Xhl || stall_dmem_Xhl ); //stall_imem_Xhl || 
 
   // Next bubble bit
@@ -711,13 +711,13 @@ module riscv_CoreCtrl
 
   // Stall in M if memory response is not returned for a valid request
 
-  // CHANGE FOR FORMAL
+  // CHANGED FOR FORMAL
   wire stall_dmem_Mhl = ( !reset && dmemreq_val_Mhl && inst_val_Mhl && !dmemresp_val );
   //wire stall_imem_Mhl = ( !reset && imemreq_val_Fhl && inst_val_Fhl && !imemresp_val );
 
   // Aggregate Stall Signal
 
-  // CHANGE FOR FORMAL
+  // CHANGED FOR FORMAL
   wire stall_Mhl = ( stall_dmem_Mhl ); //stall_imem_Mhl ||
 
   // Next bubble bit
