@@ -10,4 +10,4 @@
 -f ${PROP_PATH}/../manual_sub.vc
 ${PROP_PATH}/riscvooo-CoreReorderBuffer_prop.sv
 ${PROP_PATH}/riscvooo-CoreReorderBuffer_bind.svh
-${DUT_ROOT}/HOP4/riscvooo-CoreReorderBuffer.v
+${DUT_ROOT}/ece475-lab4/riscvooo-CoreReorderBuffer.v

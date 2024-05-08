@@ -2,7 +2,7 @@
 // to check the behavior of the original RTL module, whose interface is described below: 
 
 
-`include "imuldiv-DivReqMsg.v"
+`include "../../ece475-lab1/imuldiv-DivReqMsg.v"
 
 module imuldiv_IntDivIterative_prop
 #(

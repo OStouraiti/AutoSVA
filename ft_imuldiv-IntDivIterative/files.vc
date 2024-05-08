@@ -10,4 +10,4 @@
 -f ${PROP_PATH}/../manual_sub.vc
 ${PROP_PATH}/imuldiv-IntDivIterative_prop.sv
 ${PROP_PATH}/imuldiv-IntDivIterative_bind.svh
-${DUT_ROOT}/imuldiv/imuldiv-IntDivIterative.v
+${DUT_ROOT}/ece475-lab1/imuldiv-IntDivIterative.v

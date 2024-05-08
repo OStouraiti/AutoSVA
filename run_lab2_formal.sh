@@ -1,1 +1,0 @@
-python2 autosva.py -f ece475-lab2/riscvbyp/riscvbyp-Core.v -v -i riscv_Core -x XPROP -tool jasper

@@ -2,9 +2,9 @@
 // to check the behavior of the original RTL module, whose interface is described below: 
 
 
-`include "imuldiv-MulDivReqMsg.v"
-`include "imuldiv-IntMulIterative.v"
-`include "imuldiv-IntDivIterative.v"
+`include "../../ece475-lab1/imuldiv-MulDivReqMsg.v"
+`include "../../ece475-lab1/imuldiv-IntMulIterative.v"
+`include "../../ece475-lab1/imuldiv-IntDivIterative.v"
 
 module imuldiv_IntMulDivIterative_prop
 #(

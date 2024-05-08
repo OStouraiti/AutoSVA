@@ -5,7 +5,7 @@
 `ifndef RISCV_CORE_DPATH_V
 `define RISCV_CORE_DPATH_V
 
-`include "../../imuldiv/imuldiv-IntMulDivIterative.v"
+`include "../../ece475-lab1/imuldiv-IntMulDivIterative.v"
 `include "../../ece475-lab2/riscvbyp/riscvbyp-InstMsg.v"
 `include "../../ece475-lab2/riscvbyp/riscvbyp-CoreDpathAlu.v"
 `include "../../ece475-lab2/riscvbyp/riscvbyp-CoreDpathRegfile.v"

@@ -15,7 +15,7 @@ set_analyze_librescan on
 analyze -clear
 analyze -sv12 -f ${AUTOSVA_ROOT}/ft_riscvbyp-Core/files.vc
 # Elaborate design and properties
-elaborate -top riscv_Core -create_related_covers {witness precondition} -auto_hr_info
+elaborate -top riscv_Core -bbox_mul 2232 -bbox_div 2276 -bbox_mod 2305 -create_related_covers {witness precondition} -auto_hr_info
 # Set up Clocks and Resets
 clock clk
 reset -expression (reset)
